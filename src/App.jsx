@@ -17,7 +17,10 @@ function useLiveData() {
       const comp = ev.competitions?.[0];
       const players = (comp?.competitors || []).map(c => {
         const a = c.athlete || {};
-        const rounds = (c.linescores || []).map(ls => ({ score: parseInt(ls.displayValue) || null }));
+        /* FIX 2: treat "E" round score as 0 (even par) so it counts in lowest-round game */
+        const rounds = (c.linescores || []).map(ls => ({
+          score: ls.displayValue === "E" ? 0 : (parseInt(ls.displayValue) || null)
+        }));
         return { name: a.displayName || "", position: parseInt(c.status?.position?.id) || null, positionDisplay: c.status?.position?.displayName || "—", toPar: c.score?.displayValue || "E", toParValue: c.score?.value ?? null, rounds, earnings: c.earnings ? parseFloat(c.earnings) : 0, isCut: c.status?.type?.name === "STATUS_CUT" };
       });
       const st = ev.status?.type?.name || "STATUS_SCHEDULED";
@@ -30,6 +33,8 @@ function useLiveData() {
 }
 
 const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+/* FIX 1: first-initial + last-name fallback to distinguish Nicolai vs Rasmus Hojgaard */
+const initLast = s => { const p = s.split(" "); return (p[0]?.[0] || "") + (p[p.length - 1] || ""); };
 
 function buildLPM(ld, db) {
   if (!ld?.players) return {};
@@ -38,7 +43,7 @@ function buildLPM(ld, db) {
     const l = norm(lp.name || "");
     for (const [k, p] of Object.entries(db)) {
       const dl = norm(p.name);
-      if (dl === l || dl.split(" ").pop() === l.split(" ").pop()) { if (!m[k]) m[k] = lp; break; }
+      if (dl === l || initLast(dl) === initLast(l)) { if (!m[k]) m[k] = lp; break; }
     }
   }
   return m;
@@ -51,8 +56,8 @@ const P = {
   mcilroy: { name: "Rory McIlroy", owgr: 2, bucket: "1-10", flag: "🇬🇧" },
   rose: { name: "Justin Rose", owgr: 9, bucket: "1-10", flag: "🇬🇧" },
   fleetwood: { name: "Tommy Fleetwood", owgr: 4, bucket: "1-10", flag: "🇬🇧" },
-  gotterup: { name: "Chris Gotterup", owgr: 11, bucket: "11-20", flag: "🇺🇸" },
-  henley: { name: "Russell Henley", owgr: 12, bucket: "11-20", flag: "🇺🇸" },
+  gotterup: { name: "Chris Gotterup", owgr: 11, bucket: "1-10", flag: "🇺🇸" },
+  henley: { name: "Russell Henley", owgr: 12, bucket: "1-10", flag: "🇺🇸" },
   spaun: { name: "J.J. Spaun", owgr: 5, bucket: "1-10", flag: "🇺🇸" },
   macintyre: { name: "Robert MacIntyre", owgr: 8, bucket: "1-10", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
   schauffele: { name: "Xander Schauffele", owgr: 10, bucket: "1-10", flag: "🇺🇸" },
@@ -60,34 +65,34 @@ const P = {
   matsuyama: { name: "Hideki Matsuyama", owgr: 14, bucket: "11-20", flag: "🇯🇵" },
   jthomas: { name: "Justin Thomas", owgr: 15, bucket: "11-20", flag: "🇺🇸" },
   straka: { name: "Sepp Straka", owgr: 13, bucket: "11-20", flag: "🇦🇹" },
-  hovland: { name: "Viktor Hovland", owgr: 22, bucket: "21-30", flag: "🇳🇴" },
-  reed: { name: "Patrick Reed", owgr: 23, bucket: "21-30", flag: "🇺🇸" },
-  morikawa: { name: "Collin Morikawa", owgr: 7, bucket: "1-10", flag: "🇺🇸" },
+  hovland: { name: "Viktor Hovland", owgr: 22, bucket: "11-20", flag: "🇳🇴" },
+  reed: { name: "Patrick Reed", owgr: 23, bucket: "11-20", flag: "🇺🇸" },
+  morikawa: { name: "Collin Morikawa", owgr: 7, bucket: "11-20", flag: "🇺🇸" },
   aberg: { name: "Ludvig Åberg", owgr: 17, bucket: "11-20", flag: "🇸🇪" },
   // Bucket 21-30
-  cyoung: { name: "Cameron Young", owgr: 3, bucket: "1-10", flag: "🇺🇸" },
-  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 6, bucket: "1-10", flag: "🇬🇧" },
-  hatton: { name: "Tyrrell Hatton", owgr: 31, bucket: "31-40", flag: "🇬🇧" },
-  rai: { name: "Aaron Rai", owgr: 39, bucket: "31-40", flag: "🇬🇧" },
-  burns: { name: "Sam Burns", owgr: 33, bucket: "31-40", flag: "🇺🇸" },
-  lowry: { name: "Shane Lowry", owgr: 32, bucket: "31-40", flag: "🇮🇪" },
-  cantlay: { name: "Patrick Cantlay", owgr: 35, bucket: "31-40", flag: "🇺🇸" },
+  cyoung: { name: "Cameron Young", owgr: 3, bucket: "21-30", flag: "🇺🇸" },
+  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 6, bucket: "21-30", flag: "🇬🇧" },
+  hatton: { name: "Tyrrell Hatton", owgr: 31, bucket: "21-30", flag: "🇬🇧" },
+  rai: { name: "Aaron Rai", owgr: 39, bucket: "21-30", flag: "🇬🇧" },
+  burns: { name: "Sam Burns", owgr: 33, bucket: "21-30", flag: "🇺🇸" },
+  lowry: { name: "Shane Lowry", owgr: 32, bucket: "21-30", flag: "🇮🇪" },
+  cantlay: { name: "Patrick Cantlay", owgr: 35, bucket: "21-30", flag: "🇺🇸" },
   // Bucket 31-40
   penge: { name: "Marco Penge", owgr: 37, bucket: "31-40", flag: "🇬🇧" },
-  conners: { name: "Corey Conners", owgr: 44, bucket: "40+", flag: "🇨🇦" },
-  dechambeau: { name: "Bryson DeChambeau", owgr: 24, bucket: "21-30", flag: "🇺🇸" },
-  day: { name: "Jason Day", owgr: 41, bucket: "40+", flag: "🇦🇺" },
+  conners: { name: "Corey Conners", owgr: 44, bucket: "31-40", flag: "🇨🇦" },
+  dechambeau: { name: "Bryson DeChambeau", owgr: 24, bucket: "31-40", flag: "🇺🇸" },
+  day: { name: "Jason Day", owgr: 41, bucket: "31-40", flag: "🇦🇺" },
   // Bucket 40+
   mkim: { name: "Michael Kim", owgr: 43, bucket: "40+", flag: "🇺🇸" },
   harman: { name: "Brian Harman", owgr: 50, bucket: "40+", flag: "🇺🇸" },
-  bhatia: { name: "Akshay Bhatia", owgr: 21, bucket: "21-30", flag: "🇺🇸" },
-  nhoigaard: { name: "Nicolai Højgaard", owgr: 36, bucket: "31-40", flag: "🇩🇰" },
-  mwlee: { name: "Min Woo Lee", owgr: 25, bucket: "21-30", flag: "🇦🇺" },
-  berger: { name: "Daniel Berger", owgr: 38, bucket: "31-40", flag: "🇺🇸" },
+  bhatia: { name: "Akshay Bhatia", owgr: 21, bucket: "40+", flag: "🇺🇸" },
+  nhoigaard: { name: "Nicolai Højgaard", owgr: 36, bucket: "40+", flag: "🇩🇰" },
+  mwlee: { name: "Min Woo Lee", owgr: 25, bucket: "40+", flag: "🇦🇺" },
+  berger: { name: "Daniel Berger", owgr: 38, bucket: "40+", flag: "🇺🇸" },
   wclark: { name: "Wyndham Clark", owgr: 78, bucket: "40+", flag: "🇺🇸" },
   knapp: { name: "Jake Knapp", owgr: 42, bucket: "40+", flag: "🇺🇸" },
   echavarria: { name: "Nico Echavarria", owgr: 40, bucket: "40+", flag: "🇨🇴" },
-  rahm: { name: "Jon Rahm", owgr: 30, bucket: "21-30", flag: "🇪🇸" },
+  rahm: { name: "Jon Rahm", owgr: 30, bucket: "40+", flag: "🇪🇸" },
   hli: { name: "Haotong Li", owgr: 84, bucket: "40+", flag: "🇨🇳" },
   homa: { name: "Max Homa", owgr: 163, bucket: "40+", flag: "🇺🇸" },
   ascott: { name: "Adam Scott", owgr: 53, bucket: "40+", flag: "🇦🇺" },
@@ -101,7 +106,7 @@ const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", 
 const BUCKET_ORDER = { "1-10": 0, "11-20": 1, "21-30": 2, "31-40": 3, "40+": 4 };
 const sortPicksByBucket = (picks) => [...picks].sort((a, b) => (BUCKET_ORDER[P[a]?.bucket] ?? 9) - (BUCKET_ORDER[P[b]?.bucket] ?? 9));
 
-// 43 Entrants — picks read from submitted table
+// 43 Entrants
 const ENTRANTS = [
   { name: "S.Gear-Rogalski", picks: ["scheffler", "aberg", "rahm", "cantlay", "spieth"], paid: false },
   { name: "J.Boardman", picks: ["fitzpatrick", "gotterup", "mwlee", "lowry", "hli"], paid: true },
@@ -154,31 +159,40 @@ const TABS = [
 ];
 
 /* ═══ HELPERS ═══ */
-const OWGR_URL = "https://www.owgr.com/ranking";
-const owgrLink = { color: "#1a472a", textDecoration: "underline", textDecorationColor: "rgba(26,71,42,0.3)", cursor: "pointer" };
 const OL = ({ rank, style: st }) => <span style={{ ...st }}>#{rank}</span>;
-
 const getTotal = (e, lpm) => e.picks.reduce((s, k) => s + (lpm[k]?.earnings || 0), 0);
 const fmtD = (v) => v ? `$${(v / 1000).toFixed(0)}k` : "—";
+/* FIX 3: $X.XM formatter for concurrent main-game scoring */
+const fmtM = (v) => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : v ? `$${v}` : "—";
 const fmtFull = (v) => v ? `$${v.toLocaleString()}` : "—";
 const sn = (k) => P[k]?.name?.split(" ").pop() || k;
 
+/* ═══ SCORE BADGE ═══ FIX 4 */
+function ScoreBadge({ toPar, toParValue }) {
+  if (toPar === undefined || toPar === null) return null;
+  const v = toParValue ?? 0;
+  const bg = v < 0 ? "#fde8e8" : v > 0 ? "#f0f0f0" : "#e8f4e8";
+  const color = v < 0 ? "#c0392b" : v > 0 ? "#777" : "#27ae60";
+  return (
+    <span style={{ display: "inline-block", padding: "1px 5px", borderRadius: 3, background: bg, color, fontWeight: 700, fontSize: 10, marginLeft: 3 }}>
+      {toPar}
+    </span>
+  );
+}
+
 /*
   ══════════════════════════════════════════════════
-  GAME 2 — LOWEST ROUND (auto-pick best from 5)
+  GAME 2 — LOWEST ROUND
   ══════════════════════════════════════════════════
-  For each entrant: rank their 5 players by their best single round.
-  Primary = player with the lowest single round.
-  Tiebreak = next player's best round.
 */
 function getPlayerBestRound(k, lpm) {
   const r = lpm[k]?.rounds;
   if (!r?.length) return null;
+  /* FIX 2: 0 (E) is a valid score — filter null only, not falsy */
   const s = r.map(x => x.score).filter(x => x !== null);
   return s.length ? Math.min(...s) : null;
 }
 
-// Returns array of { key, name, bestRound } sorted by bestRound ascending
 function getLRRanking(entrant, lpm) {
   return entrant.picks
     .map(k => ({ key: k, name: P[k]?.name, bestRound: getPlayerBestRound(k, lpm) }))
@@ -191,7 +205,6 @@ function sortLR(ents, lpm) {
     const ar = getLRRanking(a, lpm), br = getLRRanking(b, lpm);
     const a1 = ar[0]?.bestRound ?? 999, b1 = br[0]?.bestRound ?? 999;
     if (a1 !== b1) return a1 - b1;
-    // Tiebreak: next best PLAYER's best round
     const a2 = ar[1]?.bestRound ?? 999, b2 = br[1]?.bestRound ?? 999;
     return a2 - b2;
   });
@@ -199,10 +212,8 @@ function sortLR(ents, lpm) {
 
 /*
   ══════════════════════════════════════════════════
-  GAME 3 — OUT PERFORMER (auto-pick best from 5)
+  GAME 3 — OUT PERFORMER
   ══════════════════════════════════════════════════
-  For each entrant: rank their 5 players by (OWGR - finish position).
-  Must make the cut. Primary = biggest riser. Tiebreak = next biggest riser.
 */
 function getOPRanking(entrant, lpm) {
   return entrant.picks
@@ -230,7 +241,7 @@ function sortOP(ents, lpm) {
   });
 }
 
-/* ═══ ANALYSIS (Path to Victory) ═══ */
+/* ═══ ANALYSIS ═══ */
 function analyseMain(ent, all, lpm) {
   const isLive = Object.keys(lpm).length > 0;
   const mySet = new Set(ent.picks), myTot = getTotal(ent, lpm);
@@ -256,41 +267,36 @@ function PTV({ entrant, all, lpm }) {
   const main = analyseMain(entrant, all, lpm);
   const t = g => setOg(og === g ? null : g);
   const isLive = main.isLive;
-
   const lrRank = getLRRanking(entrant, lpm);
   const opRank = getOPRanking(entrant, lpm);
 
   return (
     <div style={pv.ctr} onClick={e => e.stopPropagation()}>
       <div style={pv.hdr}><span style={{ fontSize: 18 }}>🗺️</span><span style={pv.hdrT}>Path to Victory</span>{isLive && <span style={pv.live}>LIVE</span>}</div>
-
-      {/* MAIN */}
-      <GS emoji="🏆" title="Main Game" badge={isLive && main.myTot > 0 ? fmtD(main.myTot) : null} open={og === "m"} toggle={() => t("m")}>
+      <GS emoji="🏆" title="Main Game" badge={isLive && main.myTot > 0 ? fmtM(main.myTot) : null} open={og === "m"} toggle={() => t("m")}>
         {main.excl.length > 0
           ? <Chip b="Edge" t="good" title="Exclusive picks" text={<>Nobody else has <strong>{main.excl.join(", ")}</strong>.</>} />
           : <Chip b="Note" t="warn" title="No exclusive picks" text="All players shared with opponents." />}
         {main.threats.length > 0 && <Chip b="Threat" t="danger" title="Players you don't have">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
-            {main.threats.map(t => <span key={t.name} style={pv.tChip}>{t.name} {isLive && t.earn > 0 && `(${fmtD(t.earn)})`}</span>)}
+            {main.threats.map(t => <span key={t.name} style={pv.tChip}>{t.name} {isLive && t.earn > 0 && `(${fmtM(t.earn)})`}</span>)}
           </div>
         </Chip>}
         <div style={pv.mTitle}>Key Matchups</div>
         {main.km.map(m => (
           <div key={m.opp} style={pv.mu}>
             <div style={pv.muHead}>vs <strong>{m.opp}</strong>
-              {m.gap !== null && <span style={{ ...pv.gap, background: m.gap >= 0 ? "#d4edda" : "#f8d7da", color: m.gap >= 0 ? "#155724" : "#721c24" }}>{m.gap >= 0 ? "+" : ""}{fmtD(Math.abs(m.gap))}</span>}
+              {m.gap !== null && <span style={{ ...pv.gap, background: m.gap >= 0 ? "#d4edda" : "#f8d7da", color: m.gap >= 0 ? "#155724" : "#721c24" }}>{m.gap >= 0 ? "+" : ""}{fmtM(Math.abs(m.gap))}</span>}
             </div>
             {m.sc > 0 && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginBottom: 4 }}>Shared: {m.shared.join(", ")}</div>}
             <div style={{ display: "flex", gap: 6 }}>
-              <div style={{ flex: 1 }}><div style={pv.bL}>You</div>{m.myU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
+              <div style={{ flex: 1 }}><div style={pv.bL}>You</div>{m.myU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtM(p.earn)}</span>}</div>)}</div>
               <div style={{ alignSelf: "center", color: "#ccc", fontWeight: 700, fontSize: 11 }}>vs</div>
-              <div style={{ flex: 1, textAlign: "right" }}><div style={pv.bL}>Them</div>{m.oppU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
+              <div style={{ flex: 1, textAlign: "right" }}><div style={pv.bL}>Them</div>{m.oppU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtM(p.earn)}</span>}</div>)}</div>
             </div>
           </div>
         ))}
       </GS>
-
-      {/* LOWEST ROUND */}
       <GS emoji="📉" title="Lowest Round" badge={lrRank[0] ? `Best: ${lrRank[0].bestRound}` : null} open={og === "l"} toggle={() => t("l")}>
         <Chip b="Auto" t="info" title="Best rounds from your 5 players">
           {lrRank.length > 0 ? lrRank.map((r, i) => (
@@ -301,8 +307,6 @@ function PTV({ entrant, all, lpm }) {
           )) : <div style={{ fontSize: 12, color: "#888" }}>No rounds completed yet.</div>}
         </Chip>
       </GS>
-
-      {/* OUT PERFORMER */}
       <GS emoji="📈" title="Out Performer" badge={opRank[0]?.places != null ? `${opRank[0].places > 0 ? "+" : ""}${opRank[0].places}` : null} open={og === "o"} toggle={() => t("o")}>
         <Chip b="Auto" t="info" title="Outperformance from your 5 players (best first)">
           {opRank.filter(r => r.finish || r.isCut).length > 0 ? opRank.map((r, i) => (
@@ -342,7 +346,6 @@ function HomeView({ ents, lpm, isLive }) {
 
   return (
     <div>
-      {/* Prize Pool Breakdown */}
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         <div style={{flex:2,background:"#1a472a",borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"rgba(255,255,255,0.5)"}}>Total Pool</div>
@@ -363,7 +366,8 @@ function HomeView({ ents, lpm, isLive }) {
         </div>
       </div>
       {[
-        { title: "🏆 Main Game", sub: "Total Prize Money", data: ms, detail: e => isLive && getTotal(e, lpm) > 0 ? fmtFull(getTotal(e, lpm)) : "—" },
+        /* FIX 3: fmtM for main game */
+        { title: "🏆 Main Game", sub: "Total Prize Money", data: ms, detail: e => isLive && getTotal(e, lpm) > 0 ? fmtM(getTotal(e, lpm)) : "—" },
         { title: "📉 Lowest Round", sub: "Best Single Round", data: ls, detail: e => { const r = getLRRanking(e, lpm); return r[0] ? `${r[0].bestRound} (${sn(r[0].key)})` : "—"; } },
         { title: "📈 Out Performer", sub: "Places vs OWGR", data: os, detail: e => { const r = getOPRanking(e, lpm); return r[0]?.places != null ? `+${r[0].places} (${sn(r[0].key)})` : "—"; } },
       ].map(g => (
@@ -425,11 +429,9 @@ export default function App() {
           <div style={s.feed}>{loading ? "Connecting..." : err ? `Error: ${err}` : `ESPN ✓ · ${Object.keys(lpm).length} matched`}{ts && !loading && ` · ${ts.toLocaleTimeString()}`}<button onClick={refresh} style={s.refBtn}>↻</button></div>
         </div>
       </header>
-
       <nav style={s.tabBar}>
         {TABS.map(t => (<button key={t.id} onClick={() => setTab(t.id)} style={{ ...s.tab, ...(tab === t.id ? s.tabA : {}) }}>{t.label}</button>))}
       </nav>
-
       <main style={s.main}>
         {tab === "home" && <HomeView ents={sorted} lpm={lpm} isLive={isLive} />}
         {tab === "picks" && <PicksView ents={sorted} exp={exp} setExp={setExp} lpm={lpm} isLive={isLive} />}
@@ -438,7 +440,6 @@ export default function App() {
         {tab === "outperformer" && <OPView ents={sorted} lpm={lpm} />}
         {tab === "rules" && <RulesView />}
       </main>
-
       <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via owgr.com</footer>
     </div>
   );
@@ -454,30 +455,53 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
           const open = exp === i, tot = getTotal(e, lpm);
           const lrRank = getLRRanking(e, lpm);
           const opRank = getOPRanking(e, lpm);
+          const sortedPicks = sortPicksByBucket(e.picks);
           return (
             <div key={e.name} style={{ ...s.card, ...(open ? s.cardOpen : {}) }} onClick={() => setExp(open ? null : i)}>
               <div style={s.cardH}>
                 <div style={s.avatar}>{isLive ? <span style={{ fontSize: 11 }}>{i + 1}</span> : e.name[0]}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: "#1a472a" }}>{e.name}{!e.paid && <span style={{ fontSize: 9, color: "#c0392b", fontWeight: 600, marginLeft: 6 }}>UNPAID</span>}</div>
-                  <div style={{ fontSize: 11, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sortPicksByBucket(e.picks).map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(" · ")}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#1a472a" }}>
+                    {e.name}{!e.paid && <span style={{ fontSize: 9, color: "#c0392b", fontWeight: 600, marginLeft: 6 }}>UNPAID</span>}
+                  </div>
+                  {/* FIX 4: score badges on collapsed card */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "1px 5px", marginTop: 2 }}>
+                    {sortedPicks.map(pk => {
+                      const l = lpm[pk];
+                      return (
+                        <span key={pk} style={{ fontSize: 11, color: "#888", whiteSpace: "nowrap" }}>
+                          {sn(pk)}{l && <ScoreBadge toPar={l.toPar} toParValue={l.toParValue} />}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
-                {isLive && tot > 0 && <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a", flexShrink: 0 }}>{fmtD(tot)}</div>}
+                {/* FIX 3: $X.XM on card header */}
+                {isLive && tot > 0 && <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a", flexShrink: 0 }}>{fmtM(tot)}</div>}
                 <div style={{ fontSize: 10, color: "#999", flexShrink: 0, marginLeft: 4 }}>{open ? "▲" : "▼"}</div>
               </div>
               {open && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #eee" }}>
-                  {sortPicksByBucket(e.picks).map(k => { const p = P[k], l = lpm[k]; return (
-                    <div key={k} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13 }}>
-                      <span style={{ ...s.bucket, backgroundColor: BC[p.bucket].bg, color: BC[p.bucket].t }}>{p.bucket}</span>
-                      <span>{p.flag}</span>
-                      <span style={{ fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
-                      {l ? <span style={{ fontSize: 11, display: "flex", gap: 6, flexShrink: 0 }}>
-                        <span style={{ color: "#1a472a", fontWeight: 600 }}>{l.positionDisplay}</span>
-                        <span style={{ color: (l.toParValue || 0) < 0 ? "#c0392b" : "#666" }}>{l.toPar}</span>
-                      </span> : <span style={{ fontSize: 11 }}><OL rank={p.owgr} style={{color:"#999"}}/></span>}
-                    </div>
-                  ); })}
+                  {sortedPicks.map(k => {
+                    const p = P[k], l = lpm[k];
+                    return (
+                      <div key={k} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13 }}>
+                        <span style={{ ...s.bucket, backgroundColor: BC[p.bucket].bg, color: BC[p.bucket].t }}>{p.bucket}</span>
+                        <span>{p.flag}</span>
+                        <span style={{ fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                        {/* FIX 4: coloured score badge + prize in expanded row */}
+                        {l ? (
+                          <span style={{ fontSize: 11, display: "flex", gap: 5, alignItems: "center", flexShrink: 0 }}>
+                            <span style={{ color: "#1a472a", fontWeight: 600 }}>{l.positionDisplay}</span>
+                            <ScoreBadge toPar={l.toPar} toParValue={l.toParValue} />
+                            {l.earnings > 0 && <span style={{ color: "#888", fontSize: 10 }}>{fmtM(l.earnings)}</span>}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11 }}><OL rank={p.owgr} style={{color:"#999"}}/></span>
+                        )}
+                      </div>
+                    );
+                  })}
                   <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 10, borderTop: "1px dashed #e0ddd5" }}>
                     <ML label="Best Round" value={lrRank[0] ? `${lrRank[0].bestRound} (${sn(lrRank[0].key)})` : "—"} />
                     <ML label="Best Out Perf" value={opRank[0]?.places != null ? `${opRank[0].places > 0 ? "+" : ""}${opRank[0].places} (${sn(opRank[0].key)})` : "—"} />
@@ -506,7 +530,8 @@ function MainView({ ents, lpm, isLive }) {
             <td style={s.td}><span style={s.pos}>{i + 1}</span></td>
             <td style={{ ...s.td, fontWeight: 600 }}>{e.name}</td>
             <td style={{ ...s.td, fontSize: 11, color: "#666", whiteSpace: "normal" }}>{sortPicksByBucket(e.picks).map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(", ")}</td>
-            <td style={{ ...s.td, textAlign: "right", fontWeight: 700 }}>{t > 0 ? fmtFull(t) : "—"}</td>
+            {/* FIX 3: concurrent $X.XM scoring */}
+            <td style={{ ...s.td, textAlign: "right", fontWeight: 700 }}>{t > 0 ? fmtM(t) : "—"}</td>
           </tr>); })}
       </TW>
     </div>
@@ -596,7 +621,7 @@ function RulesView() {
         { icon: "🏆", title: "Game 1 — Main Game (£350)", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins." },
         { icon: "📉", title: "Game 2 — Lowest Single Round (£40)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
         { icon: "📈", title: "Game 3 — Out Performer (£40)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
-        { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official Masters Tournament purse via ESPN. The 2025 total purse was $20,000,000 — $3,600,000 to the winner, $2,160,000 for 2nd, decreasing through every player who makes the cut (typically top 50 and ties after 36 holes). Players who miss the cut earn $0. The breakdown follows the standard PGA Tour distribution — the winner earns roughly 18% of the total purse." },
+        { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official Masters Tournament purse via ESPN. The 2026 total purse is $20,000,000 — $3,600,000 to the winner, $2,160,000 for 2nd, decreasing through every player who makes the cut (typically top 50 and ties after 36 holes). Players who miss the cut earn $0. The breakdown follows the standard PGA Tour distribution — the winner earns roughly 18% of the total purse." },
         { icon: "📱", title: "Live Data", text: "This dashboard pulls live scores, positions, and prize money from ESPN's golf API every 60 seconds during the tournament. All standings and Path to Victory analysis update automatically." },
         { icon: "📝", title: "Notes", text: "Games 2 & 3 use the same 5 players from your Main Game team — the model automatically selects the best performer for each game. All picks must be in by 10am Thursday before the first tee." },
       ].map((r, i) => (
@@ -609,7 +634,6 @@ function RulesView() {
   );
 }
 
-/* Shared components */
 function H2({ t, sub }) { return <div style={{ marginBottom: 16 }}><h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: "#1a472a", margin: 0 }}>{t}</h2>{sub && <p style={{ fontSize: 13, color: "#666", margin: "2px 0 0" }}>{sub}</p>}</div>; }
 
 function TW({ heads, children, alignLast }) {
