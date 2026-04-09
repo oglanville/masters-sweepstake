@@ -44,65 +44,104 @@ function buildLPM(ld, db) {
 
 /* ═══ DATA ═══ */
 const P = {
+  // Bucket 1-10
   scheffler: { name: "Scottie Scheffler", owgr: 1, bucket: "1-10", flag: "🇺🇸" },
   mcilroy: { name: "Rory McIlroy", owgr: 2, bucket: "1-10", flag: "🇬🇧" },
-  aberg: { name: "Ludvig Aberg", owgr: 3, bucket: "1-10", flag: "🇸🇪" },
-  straka: { name: "Sepp Straka", owgr: 6, bucket: "1-10", flag: "🇦🇹" },
-  hovland: { name: "Viktor Hovland", owgr: 11, bucket: "11-20", flag: "🇳🇴" },
-  fleetwood: { name: "Tommy Fleetwood", owgr: 13, bucket: "11-20", flag: "🇬🇧" },
-  macintyre: { name: "Robert MacIntyre", owgr: 14, bucket: "11-20", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  dechambeau: { name: "Bryson DeChambeau", owgr: 15, bucket: "11-20", flag: "🇺🇸" },
-  lowry: { name: "Shane Lowry", owgr: 18, bucket: "11-20", flag: "🇮🇪" },
-  rose: { name: "Justin Rose", owgr: 21, bucket: "21-30", flag: "🇬🇧" },
-  hatton: { name: "Tyrrell Hatton", owgr: 23, bucket: "21-30", flag: "🇬🇧" },
-  burns: { name: "Sam Burns", owgr: 23, bucket: "21-30", flag: "🇺🇸" },
-  conners: { name: "Corey Conners", owgr: 24, bucket: "21-30", flag: "🇨🇦" },
-  scott: { name: "Adam Scott", owgr: 21, bucket: "21-30", flag: "🇦🇺" },
-  wclark: { name: "Wyndham Clark", owgr: 28, bucket: "21-30", flag: "🇺🇸" },
-  day: { name: "Jason Day", owgr: 30, bucket: "21-30", flag: "🇦🇺" },
-  novak: { name: "Alex Noren", owgr: 31, bucket: "31-40", flag: "🇸🇪" },
-  fox: { name: "Ryan Fox", owgr: 32, bucket: "31-40", flag: "🇳🇿" },
-  rai: { name: "Aaron Rai", owgr: 34, bucket: "31-40", flag: "🇬🇧" },
-  pendrith: { name: "Taylor Pendrith", owgr: 35, bucket: "31-40", flag: "🇨🇦" },
-  mwlee: { name: "Min Woo Lee", owgr: 31, bucket: "31-40", flag: "🇰🇷" },
-  ascott: { name: "Adam Scott", owgr: 40, bucket: "31-40", flag: "🇦🇺" },
-  niemann: { name: "Joaquin Niemann", owgr: 43, bucket: "40+", flag: "🇨🇱" },
-  gotterup: { name: "Chris Gotterup", owgr: 43, bucket: "40+", flag: "🇺🇸" },
-  wallace: { name: "Matt Wallace", owgr: 45, bucket: "40+", flag: "🇬🇧" },
-  spieth: { name: "Jordan Spieth", owgr: 47, bucket: "40+", flag: "🇺🇸" },
-  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 53, bucket: "40+", flag: "🇬🇧" },
-  reed: { name: "Patrick Reed", owgr: 61, bucket: "40+", flag: "🇺🇸" },
-  rahm: { name: "Jon Rahm", owgr: 72, bucket: "40+", flag: "🇪🇸" },
-  koepka: { name: "Brooks Koepka", owgr: 72, bucket: "40+", flag: "🇺🇸" },
-  penge: { name: "Christo Lamprecht", owgr: 72, bucket: "40+", flag: "🇿🇦" },
+  rose: { name: "Justin Rose", owgr: 3, bucket: "1-10", flag: "🇬🇧" },
+  fleetwood: { name: "Tommy Fleetwood", owgr: 4, bucket: "1-10", flag: "🇬🇧" },
+  gotterup: { name: "Chris Gotterup", owgr: 5, bucket: "1-10", flag: "🇺🇸" },
+  henley: { name: "Russell Henley", owgr: 6, bucket: "1-10", flag: "🇺🇸" },
+  spaun: { name: "J.J. Spaun", owgr: 7, bucket: "1-10", flag: "🇺🇸" },
+  macintyre: { name: "Robert MacIntyre", owgr: 8, bucket: "1-10", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+  schauffele: { name: "Xander Schauffele", owgr: 10, bucket: "1-10", flag: "🇺🇸" },
+  // Bucket 11-20
+  matsuyama: { name: "Hideki Matsuyama", owgr: 11, bucket: "11-20", flag: "🇯🇵" },
+  jthomas: { name: "Justin Thomas", owgr: 12, bucket: "11-20", flag: "🇺🇸" },
+  straka: { name: "Sepp Straka", owgr: 14, bucket: "11-20", flag: "🇦🇹" },
+  hovland: { name: "Viktor Hovland", owgr: 15, bucket: "11-20", flag: "🇳🇴" },
+  reed: { name: "Patrick Reed", owgr: 17, bucket: "11-20", flag: "🇺🇸" },
+  morikawa: { name: "Collin Morikawa", owgr: 19, bucket: "11-20", flag: "🇺🇸" },
+  aberg: { name: "Ludvig Aberg", owgr: 20, bucket: "11-20", flag: "🇸🇪" },
+  // Bucket 21-30
+  cyoung: { name: "Cameron Young", owgr: 21, bucket: "21-30", flag: "🇺🇸" },
+  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 23, bucket: "21-30", flag: "🇬🇧" },
+  hatton: { name: "Tyrrell Hatton", owgr: 25, bucket: "21-30", flag: "🇬🇧" },
+  rai: { name: "Aaron Rai", owgr: 27, bucket: "21-30", flag: "🇬🇧" },
+  burns: { name: "Sam Burns", owgr: 28, bucket: "21-30", flag: "🇺🇸" },
+  lowry: { name: "Shane Lowry", owgr: 29, bucket: "21-30", flag: "🇮🇪" },
+  cantlay: { name: "Patrick Cantlay", owgr: 30, bucket: "21-30", flag: "🇺🇸" },
+  // Bucket 31-40
+  penge: { name: "Marco Penge", owgr: 31, bucket: "31-40", flag: "🇬🇧" },
+  conners: { name: "Corey Conners", owgr: 32, bucket: "31-40", flag: "🇨🇦" },
+  dechambeau: { name: "Bryson DeChambeau", owgr: 33, bucket: "31-40", flag: "🇺🇸" },
+  day: { name: "Jason Day", owgr: 34, bucket: "31-40", flag: "🇦🇺" },
+  // Bucket 40+
+  mkim: { name: "Michael Kim", owgr: 41, bucket: "40+", flag: "🇺🇸" },
+  harman: { name: "Brian Harman", owgr: 46, bucket: "40+", flag: "🇺🇸" },
+  bhatia: { name: "Akshay Bhatia", owgr: 48, bucket: "40+", flag: "🇺🇸" },
+  nhoigaard: { name: "Nicolai Hoigaard", owgr: 50, bucket: "40+", flag: "🇩🇰" },
+  mwlee: { name: "Min Woo Lee", owgr: 52, bucket: "40+", flag: "🇦🇺" },
+  berger: { name: "Daniel Berger", owgr: 53, bucket: "40+", flag: "🇺🇸" },
+  wclark: { name: "Wyndham Clark", owgr: 56, bucket: "40+", flag: "🇺🇸" },
+  knapp: { name: "Jake Knapp", owgr: 62, bucket: "40+", flag: "🇺🇸" },
+  echavarria: { name: "Nico Echavarria", owgr: 65, bucket: "40+", flag: "🇨🇴" },
+  rahm: { name: "Jon Rahm", owgr: 67, bucket: "40+", flag: "🇪🇸" },
+  hli: { name: "Haotong Li", owgr: 68, bucket: "40+", flag: "🇨🇳" },
+  homa: { name: "Max Homa", owgr: 78, bucket: "40+", flag: "🇺🇸" },
+  ascott: { name: "Adam Scott", owgr: 80, bucket: "40+", flag: "🇦🇺" },
+  spieth: { name: "Jordan Spieth", owgr: 85, bucket: "40+", flag: "🇺🇸" },
+  woodland: { name: "Gary Woodland", owgr: 95, bucket: "40+", flag: "🇺🇸" },
+  koepka: { name: "Brooks Koepka", owgr: 100, bucket: "40+", flag: "🇺🇸" },
+  zjohnson: { name: "Zach Johnson", owgr: 200, bucket: "40+", flag: "🇺🇸" },
 };
 
 const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", t: "#fff" }, "21-30": { bg: "#3d7a52", t: "#fff" }, "31-40": { bg: "#5a9a6e", t: "#fff" }, "40+": { bg: "#7ab88a", t: "#1a472a" } };
 
-// Entrants — no lowestRound/outPerformer needed, model picks best automatically
+// 43 Entrants — picks read from submitted table
 const ENTRANTS = [
-  { name: "R.Taylor", picks: ["aberg", "lowry", "rose", "novak", "rahm"], paid: true },
-  { name: "E.Oliver", picks: ["scheffler", "fleetwood", "hatton", "fox", "rahm"], paid: true },
-  { name: "E.Stringer", picks: ["mcilroy", "lowry", "hatton", "fox", "rahm"], paid: false },
-  { name: "Wreghitt", picks: ["scheffler", "hovland", "hatton", "rai", "niemann"], paid: true },
-  { name: "C.Valton", picks: ["mcilroy", "fleetwood", "hatton", "fox", "gotterup"], paid: true },
-  { name: "A.Simpson", picks: ["mcilroy", "fleetwood", "hatton", "day", "fitzpatrick"], paid: false },
-  { name: "J.Miller", picks: ["mcilroy", "hovland", "burns", "fox", "rahm"], paid: true },
-  { name: "T.Rossides", picks: ["aberg", "fleetwood", "burns", "fox", "rahm"], paid: true },
-  { name: "C.Glanville", picks: ["scheffler", "fleetwood", "hatton", "fox", "fitzpatrick"], paid: true },
-  { name: "A.Glanville", picks: ["mcilroy", "lowry", "scott", "rai", "spieth"], paid: false },
-  { name: "S.Adams", picks: ["mcilroy", "fleetwood", "hatton", "ascott", "reed"], paid: true },
-  { name: "J.Cunningham", picks: ["scheffler", "dechambeau", "wclark", "mwlee", "fitzpatrick"], paid: true },
-  { name: "N.Mays", picks: ["mcilroy", "macintyre", "rose", "fox", "fitzpatrick"], paid: true },
-  { name: "O.Mays", picks: ["straka", "fleetwood", "rose", "mwlee", "wallace"], paid: false },
-  { name: "H.Swindell", picks: ["scheffler", "hovland", "hatton", "novak", "fitzpatrick"], paid: true },
-  { name: "L.Merriel", picks: ["scheffler", "lowry", "conners", "mwlee", "rahm"], paid: true },
-  { name: "O.Gilroy", picks: ["mcilroy", "dechambeau", "wclark", "ascott", "koepka"], paid: true },
-  { name: "T.Ishmael", picks: ["scheffler", "fleetwood", "hatton", "pendrith", "rahm"], paid: false },
-  { name: "J.Gambler", picks: ["mcilroy", "macintyre", "rose", "fox", "rahm"], paid: true },
-  { name: "J.Pickard", picks: ["mcilroy", "macintyre", "rose", "fox", "fitzpatrick"], paid: true },
-  { name: "L.Swindell", picks: ["scheffler", "fleetwood", "hatton", "rai", "rahm"], paid: true },
-  { name: "H.Willis", picks: ["mcilroy", "fleetwood", "rose", "ascott", "penge"], paid: false },
+  { name: "S.Gear-Rogalski", picks: ["scheffler", "aberg", "rahm", "cantlay", "spieth"], paid: false },
+  { name: "J.Boardman", picks: ["fitzpatrick", "gotterup", "mwlee", "lowry", "hli"], paid: true },
+  { name: "A.Lumsden", picks: ["mcilroy", "aberg", "rahm", "lowry", "woodland"], paid: false },
+  { name: "S.Adams", picks: ["scheffler", "aberg", "dechambeau", "nhoigaard", "ascott"], paid: false },
+  { name: "A.Glanville", picks: ["rose", "aberg", "dechambeau", "burns", "ascott"], paid: false },
+  { name: "H.Eldridge", picks: ["scheffler", "matsuyama", "mwlee", "hatton", "ascott"], paid: false },
+  { name: "H.Swindell", picks: ["mcilroy", "aberg", "rahm", "hatton", "knapp"], paid: false },
+  { name: "O.Gilroy", picks: ["fleetwood", "aberg", "dechambeau", "cantlay", "knapp"], paid: true },
+  { name: "E.Oliver", picks: ["scheffler", "aberg", "rahm", "cantlay", "knapp"], paid: false },
+  { name: "I.Glanville", picks: ["scheffler", "aberg", "dechambeau", "cantlay", "spieth"], paid: false },
+  { name: "J.Pickard", picks: ["fitzpatrick", "aberg", "dechambeau", "penge", "ascott"], paid: true },
+  { name: "A.Simpson", picks: ["rose", "aberg", "dechambeau", "hatton", "day"], paid: false },
+  { name: "J.Wreghitt", picks: ["scheffler", "aberg", "dechambeau", "hatton", "homa"], paid: true },
+  { name: "N.Mays", picks: ["cyoung", "aberg", "bhatia", "nhoigaard", "woodland"], paid: false },
+  { name: "H.Willis", picks: ["scheffler", "aberg", "rahm", "nhoigaard", "conners"], paid: true },
+  { name: "E.Stringer", picks: ["fitzpatrick", "aberg", "rahm", "hatton", "zjohnson"], paid: true },
+  { name: "L.Swindell", picks: ["scheffler", "gotterup", "rahm", "lowry", "conners"], paid: false },
+  { name: "M.Van Der Vorm", picks: ["mcilroy", "matsuyama", "dechambeau", "lowry", "ascott"], paid: false },
+  { name: "A.Breakspear", picks: ["scheffler", "aberg", "bhatia", "penge", "conners"], paid: true },
+  { name: "T.Harty", picks: ["fleetwood", "aberg", "mwlee", "nhoigaard", "day"], paid: false },
+  { name: "R.Harty", picks: ["scheffler", "matsuyama", "rahm", "cantlay", "day"], paid: false },
+  { name: "M.Harty", picks: ["schauffele", "jthomas", "dechambeau", "cantlay", "lowry"], paid: false },
+  { name: "C.Turpin", picks: ["schauffele", "matsuyama", "rahm", "nhoigaard", "koepka"], paid: true },
+  { name: "J.Bell", picks: ["rose", "henley", "rahm", "echavarria", "ascott"], paid: true },
+  { name: "S.Glanville", picks: ["mcilroy", "aberg", "mwlee", "hatton", "koepka"], paid: false },
+  { name: "T.Ishmael", picks: ["scheffler", "aberg", "rahm", "cantlay", "koepka"], paid: false },
+  { name: "J.Campling", picks: ["fitzpatrick", "gotterup", "rahm", "berger", "spieth"], paid: true },
+  { name: "O.Mays", picks: ["macintyre", "aberg", "dechambeau", "lowry", "conners"], paid: true },
+  { name: "H.Ball", picks: ["mcilroy", "aberg", "dechambeau", "lowry", "conners"], paid: true },
+  { name: "G.Bilson", picks: ["schauffele", "aberg", "dechambeau", "rai", "echavarria"], paid: true },
+  { name: "B.Cook", picks: ["cyoung", "gotterup", "rahm", "cantlay", "conners"], paid: true },
+  { name: "R.Wade", picks: ["fleetwood", "gotterup", "dechambeau", "lowry", "koepka"], paid: true },
+  { name: "C.Glanville", picks: ["cyoung", "aberg", "dechambeau", "nhoigaard", "knapp"], paid: false },
+  { name: "J.Gambler", picks: ["mcilroy", "aberg", "reed", "hatton", "harman"], paid: false },
+  { name: "M.Lowen", picks: ["rose", "aberg", "rahm", "burns", "harman"], paid: true },
+  { name: "E.Morley-Smith", picks: ["cyoung", "aberg", "dechambeau", "hatton", "day"], paid: true },
+  { name: "G.Morley-Smith", picks: ["fitzpatrick", "matsuyama", "bhatia", "hatton", "day"], paid: true },
+  { name: "L.Butler", picks: ["morikawa", "aberg", "rahm", "hatton", "koepka"], paid: true },
+  { name: "J.Cunningham", picks: ["scheffler", "aberg", "dechambeau", "hatton", "day"], paid: false },
+  { name: "L.Hunt", picks: ["scheffler", "jthomas", "dechambeau", "lowry", "wclark"], paid: true },
+  { name: "M.Crawford", picks: ["fleetwood", "aberg", "dechambeau", "lowry", "ascott"], paid: true },
+  { name: "M.Nuttall", picks: ["schauffele", "aberg", "rahm", "lowry", "burns"], paid: true },
+  { name: "R.Hardingham", picks: ["spaun", "straka", "dechambeau", "burns", "conners"], paid: true },
 ];
 
 const TABS = [
@@ -111,6 +150,10 @@ const TABS = [
 ];
 
 /* ═══ HELPERS ═══ */
+const OWGR_URL = "https://www.owgr.com/ranking";
+const owgrLink = { color: "#1a472a", textDecoration: "underline", textDecorationColor: "rgba(26,71,42,0.3)", cursor: "pointer" };
+const OL = ({ rank, style: st }) => <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{ ...owgrLink, ...st }} onClick={e => e.stopPropagation()}>#{rank}</a>;
+
 const getTotal = (e, lpm) => e.picks.reduce((s, k) => s + (lpm[k]?.earnings || 0), 0);
 const fmtD = (v) => v ? `$${(v / 1000).toFixed(0)}k` : "—";
 const fmtFull = (v) => v ? `$${v.toLocaleString()}` : "—";
@@ -235,9 +278,9 @@ function PTV({ entrant, all, lpm }) {
             </div>
             {m.sc > 0 && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginBottom: 4 }}>Shared: {m.shared.join(", ")}</div>}
             <div style={{ display: "flex", gap: 6 }}>
-              <div style={{ flex: 1 }}><div style={pv.bL}>You</div>{m.myU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <span style={{ color: "#999", fontSize: 10 }}>#{p.owgr}</span>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
+              <div style={{ flex: 1 }}><div style={pv.bL}>You</div>{m.myU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
               <div style={{ alignSelf: "center", color: "#ccc", fontWeight: 700, fontSize: 11 }}>vs</div>
-              <div style={{ flex: 1, textAlign: "right" }}><div style={pv.bL}>Them</div>{m.oppU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <span style={{ color: "#999", fontSize: 10 }}>#{p.owgr}</span>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
+              <div style={{ flex: 1, textAlign: "right" }}><div style={pv.bL}>Them</div>{m.oppU.map(p => <div key={p.key} style={pv.bP}>{sn(p.key)} <OL rank={p.owgr} style={{color:"#999",fontSize:10}}/>{isLive && p.earn > 0 && <span style={{ color: "#1a472a", fontWeight: 600, fontSize: 10, marginLeft: 4 }}>{fmtD(p.earn)}</span>}</div>)}</div>
             </div>
           </div>
         ))}
@@ -260,7 +303,7 @@ function PTV({ entrant, all, lpm }) {
         <Chip b="Auto" t="info" title="Outperformance from your 5 players (best first)">
           {opRank.filter(r => r.finish || r.isCut).length > 0 ? opRank.map((r, i) => (
             <div key={r.key} style={{ fontSize: 12, marginBottom: 2, fontWeight: i === 0 ? 700 : 400, color: r.isCut ? "#c0392b" : i === 0 ? "#1a472a" : "#555" }}>
-              {i === 0 ? "★ " : "  "}{r.name} (#{r.owgr}) → {r.isCut ? "CUT" : r.finish ? <>T{r.finish},{" "}<span style={i === 0 ? { background: r.places > 0 ? "#d4edda" : "#f8d7da", padding: "1px 5px", borderRadius: 3, fontWeight: 800 } : { fontWeight: 600 }}>{r.places > 0 ? "+" : ""}{r.places}</span></> : "—"}
+              {i === 0 ? "★ " : "  "}{r.name} (<OL rank={r.owgr} style={{fontSize:11}}/>) → {r.isCut ? "CUT" : r.finish ? <>T{r.finish},{" "}<span style={i === 0 ? { background: r.places > 0 ? "#d4edda" : "#f8d7da", padding: "1px 5px", borderRadius: 3, fontWeight: 800 } : { fontWeight: 600 }}>{r.places > 0 ? "+" : ""}{r.places}</span></> : "—"}
               {i === 1 && r.places != null && <span style={{ fontSize: 10, color: "#999", marginLeft: 6 }}>(tiebreak)</span>}
             </div>
           )) : <div style={{ fontSize: 12, color: "#888" }}>Waiting for tournament data.</div>}
@@ -295,6 +338,26 @@ function HomeView({ ents, lpm, isLive }) {
 
   return (
     <div>
+      {/* Prize Pool Breakdown */}
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        <div style={{flex:2,background:"#1a472a",borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
+          <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"rgba(255,255,255,0.5)"}}>Total Pool</div>
+          <div style={{fontSize:22,fontWeight:800,color:"#f4d35e",fontFamily:"'Playfair Display',serif"}}>£430</div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.5)"}}>{ents.length} entrants</div>
+        </div>
+        <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
+          <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Main</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£350</div>
+        </div>
+        <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
+          <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Low Rd</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£40</div>
+        </div>
+        <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
+          <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Out Perf</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£40</div>
+        </div>
+      </div>
       {[
         { title: "🏆 Main Game", sub: "Total Prize Money", data: ms, detail: e => isLive && getTotal(e, lpm) > 0 ? fmtFull(getTotal(e, lpm)) : "—" },
         { title: "📉 Lowest Round", sub: "Best Single Round", data: ls, detail: e => { const r = getLRRanking(e, lpm); return r[0] ? `${r[0].bestRound} (${sn(r[0].key)})` : "—"; } },
@@ -349,8 +412,8 @@ export default function App() {
         <div style={s.hdrIn}>
           <div style={{ fontSize: 28 }}>⛳</div>
           <div style={{ flex: 1 }}>
-            <h1 style={s.title}>The Masters <span style={{ fontWeight: 400, fontSize: "0.6em" }}>2026</span></h1>
-            <div style={s.meta}>Augusta National · Apr 9–12 · £220 pool</div>
+            <h1 style={s.title}>The Masters Sweepstake <span style={{ fontWeight: 400, fontSize: "0.6em" }}>2026</span></h1>
+            <div style={s.meta}>Augusta National · Apr 9–12 · £430 pool</div>
           </div>
         </div>
         <div style={s.statusRow}>
@@ -372,7 +435,7 @@ export default function App() {
         {tab === "rules" && <RulesView />}
       </main>
 
-      <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via owgr.com</footer>
+      <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{color:"#1a472a",fontWeight:600}}>owgr.com</a></footer>
     </div>
   );
 }
@@ -408,7 +471,7 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
                       {l ? <span style={{ fontSize: 11, display: "flex", gap: 6, flexShrink: 0 }}>
                         <span style={{ color: "#1a472a", fontWeight: 600 }}>{l.positionDisplay}</span>
                         <span style={{ color: (l.toParValue || 0) < 0 ? "#c0392b" : "#666" }}>{l.toPar}</span>
-                      </span> : <span style={{ fontSize: 11, color: "#999" }}>#{p.owgr}</span>}
+                      </span> : <span style={{ fontSize: 11 }}><OL rank={p.owgr} style={{color:"#999"}}/></span>}
                     </div>
                   ); })}
                   <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 10, borderTop: "1px dashed #e0ddd5" }}>
@@ -495,7 +558,7 @@ function OPView({ ents, lpm }) {
               <td style={{ ...s.td, whiteSpace: "normal" }}>
                 {hasData ? (<>
                   <div style={{ fontWeight: 700, fontSize: 13, color: best?.isCut ? "#c0392b" : "#1a472a" }}>
-                    {P[best?.key]?.flag} {best?.name} <span style={{ fontWeight: 400, fontSize: 10, color: "#888" }}>#{best?.owgr}</span>
+                    {P[best?.key]?.flag} {best?.name} <span style={{ fontWeight: 400, fontSize: 10, color: "#888" }}><OL rank={best?.owgr} style={{color:"#888",fontSize:10}}/></span>
                   </div>
                   {best && (best.isCut
                     ? <div style={{ fontSize: 11, color: "#c0392b", fontWeight: 600 }}>MISSED CUT</div>
@@ -503,7 +566,7 @@ function OPView({ ents, lpm }) {
                   )}
                   {tbs.length > 0 && <div style={{ marginTop: 3, paddingTop: 3, borderTop: "1px dashed #e0ddd5" }}>
                     <div style={{ fontSize: 9, color: "#999", textTransform: "uppercase", fontWeight: 700, marginBottom: 1 }}>Tiebreak</div>
-                    {tbs.map(tb => <div key={tb.key} style={{ fontSize: 11, color: "#777" }}>{sn(tb.key)} #{tb.owgr} → T{tb.finish}, <span style={{ fontWeight: 600, color: tb.places > 0 ? "#155724" : "#721c24" }}>{tb.places > 0 ? "+" : ""}{tb.places}</span></div>)}
+                    {tbs.map(tb => <div key={tb.key} style={{ fontSize: 11, color: "#777" }}>{sn(tb.key)} <OL rank={tb.owgr} style={{color:"#aaa",fontSize:11}}/> → T{tb.finish}, <span style={{ fontWeight: 600, color: tb.places > 0 ? "#155724" : "#721c24" }}>{tb.places > 0 ? "+" : ""}{tb.places}</span></div>)}
                   </div>}
                 </>) : <span style={{ fontSize: 12, color: "#888" }}>Waiting for data</span>}
               </td>
@@ -524,14 +587,14 @@ function RulesView() {
     <div>
       <H2 t="How It Works" sub="Three games, one team of five" />
       {[
-        { icon: "🎫", title: "Entry Fee", text: "£10 per entry. Payment to: 04-00-04 / 64310053. Submit picks via WhatsApp in rank order with your name at the top." },
-        { icon: "🏌️", title: "Player Selection", text: "Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+. All must be confirmed starters. Check rankings at owgr.com/ranking." },
-        { icon: "🏆", title: "Game 1 — Main Game", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins. The bigger prize pot." },
-        { icon: "📉", title: "Game 2 — Lowest Single Round", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team. Smaller prize pot." },
-        { icon: "📈", title: "Game 3 — Out Performer", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team. Smaller prize pot." },
-        { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official Masters Tournament purse via ESPN. The 2025 total purse was $20,000,000 — $3,600,000 to the winner, $2,160,000 for 2nd, decreasing through every player who makes the cut. The Masters pays out to every player who makes the cut (typically top 50 and ties after 36 holes). Players who miss the cut earn $0. The prize breakdown follows the standard PGA Tour distribution — the winner earns roughly 18% of the total purse." },
+        { icon: "🎫", title: "Entry Fee", text: "£10 per entry (43 entrants = £430 pool). Payment to: 04-00-04 / 64310053. Submit picks via WhatsApp in rank order with your name at the top." },
+        { icon: "🏌️", title: "Player Selection", text: <span>Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+. All must be confirmed starters. Check rankings at <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{color:"#1a472a",fontWeight:600}}>owgr.com/ranking</a>.</span> },
+        { icon: "🏆", title: "Game 1 — Main Game (£350)", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins." },
+        { icon: "📉", title: "Game 2 — Lowest Single Round (£40)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
+        { icon: "📈", title: "Game 3 — Out Performer (£40)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
+        { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official Masters Tournament purse via ESPN. The 2025 total purse was $20,000,000 — $3,600,000 to the winner, $2,160,000 for 2nd, decreasing through every player who makes the cut (typically top 50 and ties after 36 holes). Players who miss the cut earn $0. The breakdown follows the standard PGA Tour distribution — the winner earns roughly 18% of the total purse." },
         { icon: "📱", title: "Live Data", text: "This dashboard pulls live scores, positions, and prize money from ESPN's golf API every 60 seconds during the tournament. All standings and Path to Victory analysis update automatically." },
-        { icon: "📝", title: "Notes", text: "Games 2 & 3 use the same 5 players from your Main Game team — the model automatically selects the best performer for each game. Their prize pots are smaller, funded from the overall entry pool. All picks must be in by 10am Thursday before the first tee." },
+        { icon: "📝", title: "Notes", text: "Games 2 & 3 use the same 5 players from your Main Game team — the model automatically selects the best performer for each game. All picks must be in by 10am Thursday before the first tee." },
       ].map((r, i) => (
         <div key={i} style={{ display: "flex", gap: 12, background: "#fff", borderRadius: 10, padding: 14, border: "1px solid #e0ddd5", marginBottom: 8 }}>
           <div style={{ fontSize: 24, flexShrink: 0 }}>{r.icon}</div>
