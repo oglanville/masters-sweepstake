@@ -151,7 +151,7 @@ const ENTRANTS = [
   { name: "M.Crawford", picks: ["fleetwood", "aberg", "dechambeau", "lowry", "ascott"], paid: true },
   { name: "M.Nuttall", picks: ["schauffele", "aberg", "rahm", "lowry", "burns"], paid: true },
   { name: "R.Hardingham", picks: ["spaun", "straka", "dechambeau", "burns", "conners"], paid: true },
-  { name: "J.Miller", picks: ["young", "aberg", "rahm", "nhoigaard", "spieth"], paid: true },
+  { name: "J.Miller", picks: ["young", "aberg", "rahm", "nhoigaard", "knapp"], paid: true },
 ];
 
 const TABS = [
