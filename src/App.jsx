@@ -106,7 +106,7 @@ const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", 
 const BUCKET_ORDER = { "1-10": 0, "11-20": 1, "21-30": 2, "31-40": 3, "40+": 4 };
 const sortPicksByBucket = (picks) => [...picks].sort((a, b) => (BUCKET_ORDER[P[a]?.bucket] ?? 9) - (BUCKET_ORDER[P[b]?.bucket] ?? 9));
 
-// 43 Entrants
+// 44 Entrants
 const ENTRANTS = [
   { name: "S.Gear-Rogalski", picks: ["scheffler", "aberg", "rahm", "cantlay", "spieth"], paid: true },
   { name: "J.Boardman", picks: ["fitzpatrick", "gotterup", "mwlee", "lowry", "hli"], paid: true },
@@ -151,7 +151,7 @@ const ENTRANTS = [
   { name: "M.Crawford", picks: ["fleetwood", "aberg", "dechambeau", "lowry", "ascott"], paid: true },
   { name: "M.Nuttall", picks: ["schauffele", "aberg", "rahm", "lowry", "burns"], paid: true },
   { name: "R.Hardingham", picks: ["spaun", "straka", "dechambeau", "burns", "conners"], paid: true },
-  { name: "J.Miller", picks: ["young", "aberg", "rahm", "nhoigaard", "knapp"], paid: true },
+  { name: "J.Miller", picks: ["cyoung", "aberg", "rahm", "nhoigaard", "knapp"], paid: true },
 ];
 
 const TABS = [
@@ -350,12 +350,12 @@ function HomeView({ ents, lpm, isLive }) {
       <div style={{display:"flex",gap:8,marginBottom:14}}>
         <div style={{flex:2,background:"#1a472a",borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"rgba(255,255,255,0.5)"}}>Total Pool</div>
-          <div style={{fontSize:22,fontWeight:800,color:"#f4d35e",fontFamily:"'Playfair Display',serif"}}>£430</div>
+          <div style={{fontSize:22,fontWeight:800,color:"#f4d35e",fontFamily:"'Playfair Display',serif"}}>£440</div>
           <div style={{fontSize:10,color:"rgba(255,255,255,0.5)"}}>{ents.length} entrants</div>
         </div>
         <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Main</div>
-          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£350</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£360</div>
         </div>
         <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Low Rd</div>
@@ -422,7 +422,7 @@ export default function App() {
           <div style={{ fontSize: 28 }}>⛳</div>
           <div style={{ flex: 1 }}>
             <h1 style={s.title}>The Masters Sweepstake <span style={{ fontWeight: 400, fontSize: "0.6em" }}>2026</span></h1>
-            <div style={s.meta}>Augusta National · Apr 9–12 · £430 pool</div>
+            <div style={s.meta}>Augusta National · Apr 9–12 · £440 pool</div>
           </div>
         </div>
         <div style={s.statusRow}>
@@ -617,9 +617,9 @@ function RulesView() {
     <div>
       <H2 t="How It Works" sub="Three games, one team of five" />
       {[
-        { icon: "🎫", title: "Entry Fee", text: "£10 per entry (43 entrants = £430 pool). Payment to: 04-00-04 / 64310053. Submit picks via WhatsApp in rank order with your name at the top." },
+        { icon: "🎫", title: "Entry Fee", text: "£10 per entry (44 entrants = £440 pool). Payment to: 04-00-04 / 64310053. Submit picks via WhatsApp in rank order with your name at the top." },
         { icon: "🏌️", title: "Player Selection", text: <span>Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+. All must be confirmed starters. Check rankings at owgr.com/ranking.</span> },
-        { icon: "🏆", title: "Game 1 — Main Game (£350)", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins." },
+        { icon: "🏆", title: "Game 1 — Main Game (£360)", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins." },
         { icon: "📉", title: "Game 2 — Lowest Single Round (£40)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
         { icon: "📈", title: "Game 3 — Out Performer (£40)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
         { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official Masters Tournament purse via ESPN. The 2026 total purse is $20,000,000 — $3,600,000 to the winner, $2,160,000 for 2nd, decreasing through every player who makes the cut (typically top 50 and ties after 36 holes). Players who miss the cut earn $0. The breakdown follows the standard PGA Tour distribution — the winner earns roughly 18% of the total purse." },
