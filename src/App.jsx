@@ -38,12 +38,16 @@ const initLast = s => { const p = s.split(" "); return (p[0]?.[0] || "") + (p[p.
 
 function buildLPM(ld, db) {
   if (!ld?.players) return {};
+  const projMap = calcProjectedEarnings(ld.players);
   const m = {};
   for (const lp of ld.players) {
     const l = norm(lp.name || "");
     for (const [k, p] of Object.entries(db)) {
       const dl = norm(p.name);
-      if (dl === l || initLast(dl) === initLast(l)) { if (!m[k]) m[k] = lp; break; }
+      if (dl === l || initLast(dl) === initLast(l)) {
+        if (!m[k]) m[k] = { ...lp, projectedEarnings: projMap.get(lp.name) || 0 };
+        break;
+      }
     }
   }
   return m;
@@ -106,6 +110,41 @@ const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", 
 const BUCKET_ORDER = { "1-10": 0, "11-20": 1, "21-30": 2, "31-40": 3, "40+": 4 };
 const sortPicksByBucket = (picks) => [...picks].sort((a, b) => (BUCKET_ORDER[P[a]?.bucket] ?? 9) - (BUCKET_ORDER[P[b]?.bucket] ?? 9));
 
+/* ═══ 2026 MASTERS PROJECTED PURSE — $20,000,000 total ═══ */
+const MASTERS_PURSE = {
+  1: 3600000, 2: 2160000, 3: 1360000, 4: 960000, 5: 800000,
+  6: 720000, 7: 670000, 8: 620000, 9: 580000, 10: 540000,
+  11: 500000, 12: 460000, 13: 420000, 14: 380000, 15: 340000,
+  16: 300000, 17: 280000, 18: 260000, 19: 240000, 20: 220000,
+  21: 200000, 22: 188000, 23: 176000, 24: 164000, 25: 152000,
+  26: 140000, 27: 134000, 28: 128000, 29: 122000, 30: 116000,
+  31: 110000, 32: 104000, 33: 98000, 34: 93000, 35: 88000,
+  36: 83000, 37: 78000, 38: 74000, 39: 70000, 40: 66000,
+  41: 62000, 42: 58000, 43: 54000, 44: 50000, 45: 48000,
+  46: 46000, 47: 44000, 48: 42400, 49: 41200, 50: 40000,
+};
+
+/* Calculate projected earnings from live positions, handling ties */
+function calcProjectedEarnings(players) {
+  const byPos = {};
+  for (const p of players) {
+    if (p.position && !p.isCut) {
+      if (!byPos[p.position]) byPos[p.position] = [];
+      byPos[p.position].push(p);
+    }
+  }
+  const map = new Map();
+  for (const [pos, group] of Object.entries(byPos)) {
+    const n = group.length;
+    const posNum = parseInt(pos);
+    let total = 0;
+    for (let i = 0; i < n; i++) total += MASTERS_PURSE[posNum + i] || 0;
+    const avg = Math.round(total / n);
+    for (const p of group) map.set(p.name, avg);
+  }
+  return map;
+}
+
 // 44 Entrants
 const ENTRANTS = [
   { name: "S.Gear-Rogalski", picks: ["scheffler", "aberg", "rahm", "cantlay", "spieth"], paid: true },
@@ -129,7 +168,7 @@ const ENTRANTS = [
   { name: "A.Breakspear", picks: ["scheffler", "aberg", "bhatia", "penge", "conners"], paid: true },
   { name: "T.Harty", picks: ["fleetwood", "aberg", "mwlee", "nhoigaard", "day"], paid: false },
   { name: "R.Harty", picks: ["scheffler", "matsuyama", "rahm", "cantlay", "day"], paid: false },
-  { name: "M.Harty", picks: ["schauffele", "jthomas", "dechambeau", "cantlay", "lowry"], paid: false },
+  { name: "M.Harty", picks: ["schauffele", "jthomas", "dechambeau", "lowry", "ascott"], paid: false },
   { name: "C.Turpin", picks: ["schauffele", "matsuyama", "rahm", "nhoigaard", "koepka"], paid: true },
   { name: "J.Bell", picks: ["rose", "henley", "rahm", "echavarria", "ascott"], paid: true },
   { name: "S.Glanville", picks: ["mcilroy", "aberg", "mwlee", "hatton", "day"], paid: false },
@@ -161,7 +200,10 @@ const TABS = [
 
 /* ═══ HELPERS ═══ */
 const OL = ({ rank, style: st }) => <span style={{ ...st }}>#{rank}</span>;
-const getTotal = (e, lpm) => e.picks.reduce((s, k) => s + (lpm[k]?.earnings || 0), 0);
+const getEarn = (lp) => lp ? (lp.earnings > 0 ? lp.earnings : lp.projectedEarnings || 0) : 0;
+const isProj = (lp) => lp && lp.earnings === 0 && (lp.projectedEarnings || 0) > 0;
+const getTotal = (e, lpm) => e.picks.reduce((s, k) => s + getEarn(lpm[k]), 0);
+const anyOfficial = (lpm) => Object.values(lpm).some(p => p.earnings > 0);
 const fmtD = (v) => v ? `$${(v / 1000).toFixed(0)}k` : "—";
 /* FIX 3: $X.XM formatter for concurrent main-game scoring */
 const fmtM = (v) => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : v ? `$${v}` : "—";
@@ -251,14 +293,14 @@ function analyseMain(ent, all, lpm) {
     if (opp.name === ent.name) continue;
     const os = new Set(opp.picks);
     const sh = ent.picks.filter(p => os.has(p)), mu = ent.picks.filter(p => !os.has(p)), ou = opp.picks.filter(p => !mySet.has(p));
-    matchups.push({ opp: opp.name, shared: sh.map(sn), myU: mu.map(k => ({ key: k, name: P[k]?.name, owgr: P[k]?.owgr, earn: lpm[k]?.earnings || 0 })), oppU: ou.map(k => ({ key: k, name: P[k]?.name, owgr: P[k]?.owgr, earn: lpm[k]?.earnings || 0 })), sc: sh.length, gap: isLive ? myTot - getTotal(opp, lpm) : null });
+    matchups.push({ opp: opp.name, shared: sh.map(sn), myU: mu.map(k => ({ key: k, name: P[k]?.name, owgr: P[k]?.owgr, earn: getEarn(lpm[k]) })), oppU: ou.map(k => ({ key: k, name: P[k]?.name, owgr: P[k]?.owgr, earn: getEarn(lpm[k]) })), sc: sh.length, gap: isLive ? myTot - getTotal(opp, lpm) : null });
   }
   matchups.sort((a, b) => a.gap !== null && b.gap !== null ? Math.abs(a.gap) - Math.abs(b.gap) : b.sc - a.sc);
   const oth = all.filter(e => e.name !== ent.name).flatMap(e => e.picks);
   const pc = {}; oth.forEach(p => { pc[p] = (pc[p] || 0) + 1; });
   const excl = ent.picks.filter(p => !pc[p]).map(k => P[k]?.name);
   const tp = {}; oth.forEach(p => { if (!mySet.has(p)) tp[p] = (tp[p] || 0) + 1; });
-  const threats = Object.entries(tp).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, c]) => ({ name: P[k]?.name, count: c, earn: lpm[k]?.earnings || 0 }));
+  const threats = Object.entries(tp).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, c]) => ({ name: P[k]?.name, count: c, earn: getEarn(lpm[k]) }));
   return { km: matchups.slice(0, 3), excl, threats, myTot, isLive };
 }
 
@@ -274,7 +316,7 @@ function PTV({ entrant, all, lpm }) {
   return (
     <div style={pv.ctr} onClick={e => e.stopPropagation()}>
       <div style={pv.hdr}><span style={{ fontSize: 18 }}>🗺️</span><span style={pv.hdrT}>Path to Victory</span>{isLive && <span style={pv.live}>LIVE</span>}</div>
-      <GS emoji="🏆" title="Main Game" badge={isLive && main.myTot > 0 ? fmtM(main.myTot) : null} open={og === "m"} toggle={() => t("m")}>
+      <GS emoji="🏆" title="Main Game" badge={isLive && main.myTot > 0 ? `${anyOfficial(lpm) ? "" : "~"}${fmtM(main.myTot)}` : null} open={og === "m"} toggle={() => t("m")}>
         {main.excl.length > 0
           ? <Chip b="Edge" t="good" title="Exclusive picks" text={<>Nobody else has <strong>{main.excl.join(", ")}</strong>.</>} />
           : <Chip b="Note" t="warn" title="No exclusive picks" text="All players shared with opponents." />}
@@ -367,8 +409,8 @@ function HomeView({ ents, lpm, isLive }) {
         </div>
       </div>
       {[
-        /* FIX 3: fmtM for main game */
-        { title: "🏆 Main Game", sub: "Total Prize Money", data: ms, detail: e => isLive && getTotal(e, lpm) > 0 ? fmtM(getTotal(e, lpm)) : "—" },
+        /* FIX 3: fmtM for main game — projected indicator */
+        { title: "🏆 Main Game", sub: anyOfficial(lpm) ? "Total Prize Money" : "Projected Prize Money", data: ms, detail: e => { const t = getTotal(e, lpm); return isLive && t > 0 ? `${anyOfficial(lpm) ? "" : "~"}${fmtM(t)}` : "—"; } },
         { title: "📉 Lowest Round", sub: "Best Single Round", data: ls, detail: e => { const r = getLRRanking(e, lpm); return r[0] ? `${r[0].bestRound} (${sn(r[0].key)})` : "—"; } },
         { title: "📈 Out Performer", sub: "Places vs OWGR", data: os, detail: e => { const r = getOPRanking(e, lpm); return r[0]?.places != null ? `+${r[0].places} (${sn(r[0].key)})` : "—"; } },
       ].map(g => (
@@ -477,8 +519,11 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
                     })}
                   </div>
                 </div>
-                {/* FIX 3: $X.XM on card header */}
-                {isLive && tot > 0 && <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a", flexShrink: 0 }}>{fmtM(tot)}</div>}
+                {/* FIX 3: $X.XM on card header — projected indicator */}
+                {isLive && tot > 0 && (() => {
+                  const official = e.picks.some(k => lpm[k]?.earnings > 0);
+                  return <div style={{ fontWeight: 700, fontSize: 13, color: official ? "#1a472a" : "#b8860b", fontStyle: official ? "normal" : "italic", flexShrink: 0 }}>{official ? "" : "~"}{fmtM(tot)}</div>;
+                })()}
                 <div style={{ fontSize: 10, color: "#999", flexShrink: 0, marginLeft: 4 }}>{open ? "▲" : "▼"}</div>
               </div>
               {open && (
@@ -496,6 +541,7 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
                             <span style={{ color: "#1a472a", fontWeight: 600 }}>{l.positionDisplay}</span>
                             <ScoreBadge toPar={l.toPar} toParValue={l.toParValue} />
                             {l.earnings > 0 && <span style={{ color: "#888", fontSize: 10 }}>{fmtM(l.earnings)}</span>}
+                            {l.earnings === 0 && l.projectedEarnings > 0 && <span style={{ color: "#b8860b", fontSize: 10, fontStyle: "italic" }}>~{fmtM(l.projectedEarnings)}</span>}
                           </span>
                         ) : (
                           <span style={{ fontSize: 11 }}><OL rank={p.owgr} style={{color:"#999"}}/></span>
@@ -521,18 +567,18 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
 function ML({ label, value }) { return <div style={{ flex: 1, background: "#f5f0e8", borderRadius: 8, padding: "6px 10px" }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.4px", color: "#999" }}>{label}</div><div style={{ fontSize: 12, fontWeight: 600, color: "#1a472a", marginTop: 1 }}>{value}</div></div>; }
 
 function MainView({ ents, lpm, isLive }) {
+  const official = anyOfficial(lpm);
   return (
     <div>
       <H2 t="Main Game" sub="Total prize money" />
-      <div style={s.note}>{isLive ? "Live via ESPN." : "Updates when the tournament starts."}</div>
+      <div style={s.note}>{isLive ? (official ? "Official earnings via ESPN." : "Projected earnings based on current positions. Updates to official figures when ESPN confirms.") : "Updates when the tournament starts."}</div>
       <TW heads={["Pos", "Name", "Players", "Total"]} alignLast="right">
         {ents.map((e, i) => { const t = getTotal(e, lpm); return (
           <tr key={e.name} style={i % 2 === 0 ? s.re : {}}>
             <td style={s.td}><span style={s.pos}>{i + 1}</span></td>
             <td style={{ ...s.td, fontWeight: 600 }}>{e.name}</td>
             <td style={{ ...s.td, fontSize: 11, color: "#666", whiteSpace: "normal" }}>{sortPicksByBucket(e.picks).map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(", ")}</td>
-            {/* FIX 3: concurrent $X.XM scoring */}
-            <td style={{ ...s.td, textAlign: "right", fontWeight: 700 }}>{t > 0 ? fmtM(t) : "—"}</td>
+            <td style={{ ...s.td, textAlign: "right", fontWeight: 700, color: !official && t > 0 ? "#b8860b" : undefined, fontStyle: !official && t > 0 ? "italic" : "normal" }}>{t > 0 ? `${official ? "" : "~"}${fmtM(t)}` : "—"}</td>
           </tr>); })}
       </TW>
     </div>
