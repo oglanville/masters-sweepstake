@@ -112,7 +112,7 @@ const ENTRANTS = [
   { name: "H.Swindell", picks: ["mcilroy", "aberg", "rahm", "hatton", "knapp"], paid: false },
   { name: "O.Gilroy", picks: ["fleetwood", "aberg", "dechambeau", "cantlay", "knapp"], paid: true },
   { name: "E.Oliver", picks: ["scheffler", "aberg", "rahm", "cantlay", "knapp"], paid: false },
-  { name: "I.Glanville", picks: ["scheffler", "aberg", "dechambeau", "cantlay", "spieth"], paid: false },
+  { name: "J.Glanville", picks: ["scheffler", "aberg", "dechambeau", "cantlay", "spieth"], paid: false },
   { name: "J.Pickard", picks: ["fitzpatrick", "aberg", "dechambeau", "penge", "ascott"], paid: true },
   { name: "A.Simpson", picks: ["rose", "aberg", "dechambeau", "hatton", "day"], paid: false },
   { name: "J.Wreghitt", picks: ["scheffler", "aberg", "dechambeau", "hatton", "homa"], paid: true },
