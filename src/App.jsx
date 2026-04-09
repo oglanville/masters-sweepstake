@@ -29,13 +29,15 @@ function useLiveData() {
   return { ld, loading, err, ts, refresh: fetch_ };
 }
 
+const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 function buildLPM(ld, db) {
   if (!ld?.players) return {};
   const m = {};
   for (const lp of ld.players) {
-    const l = lp.name?.toLowerCase() || "";
+    const l = norm(lp.name || "");
     for (const [k, p] of Object.entries(db)) {
-      const dl = p.name.toLowerCase();
+      const dl = norm(p.name);
       if (dl === l || dl.split(" ").pop() === l.split(" ").pop()) { if (!m[k]) m[k] = lp; break; }
     }
   }
@@ -47,55 +49,57 @@ const P = {
   // Bucket 1-10
   scheffler: { name: "Scottie Scheffler", owgr: 1, bucket: "1-10", flag: "🇺🇸" },
   mcilroy: { name: "Rory McIlroy", owgr: 2, bucket: "1-10", flag: "🇬🇧" },
-  rose: { name: "Justin Rose", owgr: 3, bucket: "1-10", flag: "🇬🇧" },
+  rose: { name: "Justin Rose", owgr: 9, bucket: "1-10", flag: "🇬🇧" },
   fleetwood: { name: "Tommy Fleetwood", owgr: 4, bucket: "1-10", flag: "🇬🇧" },
-  gotterup: { name: "Chris Gotterup", owgr: 5, bucket: "1-10", flag: "🇺🇸" },
-  henley: { name: "Russell Henley", owgr: 6, bucket: "1-10", flag: "🇺🇸" },
-  spaun: { name: "J.J. Spaun", owgr: 7, bucket: "1-10", flag: "🇺🇸" },
+  gotterup: { name: "Chris Gotterup", owgr: 11, bucket: "1-10", flag: "🇺🇸" },
+  henley: { name: "Russell Henley", owgr: 12, bucket: "1-10", flag: "🇺🇸" },
+  spaun: { name: "J.J. Spaun", owgr: 5, bucket: "1-10", flag: "🇺🇸" },
   macintyre: { name: "Robert MacIntyre", owgr: 8, bucket: "1-10", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
   schauffele: { name: "Xander Schauffele", owgr: 10, bucket: "1-10", flag: "🇺🇸" },
   // Bucket 11-20
-  matsuyama: { name: "Hideki Matsuyama", owgr: 11, bucket: "11-20", flag: "🇯🇵" },
-  jthomas: { name: "Justin Thomas", owgr: 12, bucket: "11-20", flag: "🇺🇸" },
-  straka: { name: "Sepp Straka", owgr: 14, bucket: "11-20", flag: "🇦🇹" },
-  hovland: { name: "Viktor Hovland", owgr: 15, bucket: "11-20", flag: "🇳🇴" },
-  reed: { name: "Patrick Reed", owgr: 17, bucket: "11-20", flag: "🇺🇸" },
-  morikawa: { name: "Collin Morikawa", owgr: 19, bucket: "11-20", flag: "🇺🇸" },
-  aberg: { name: "Ludvig Aberg", owgr: 20, bucket: "11-20", flag: "🇸🇪" },
+  matsuyama: { name: "Hideki Matsuyama", owgr: 14, bucket: "11-20", flag: "🇯🇵" },
+  jthomas: { name: "Justin Thomas", owgr: 15, bucket: "11-20", flag: "🇺🇸" },
+  straka: { name: "Sepp Straka", owgr: 13, bucket: "11-20", flag: "🇦🇹" },
+  hovland: { name: "Viktor Hovland", owgr: 22, bucket: "11-20", flag: "🇳🇴" },
+  reed: { name: "Patrick Reed", owgr: 23, bucket: "11-20", flag: "🇺🇸" },
+  morikawa: { name: "Collin Morikawa", owgr: 7, bucket: "11-20", flag: "🇺🇸" },
+  aberg: { name: "Ludvig Åberg", owgr: 17, bucket: "11-20", flag: "🇸🇪" },
   // Bucket 21-30
-  cyoung: { name: "Cameron Young", owgr: 21, bucket: "21-30", flag: "🇺🇸" },
-  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 23, bucket: "21-30", flag: "🇬🇧" },
-  hatton: { name: "Tyrrell Hatton", owgr: 25, bucket: "21-30", flag: "🇬🇧" },
-  rai: { name: "Aaron Rai", owgr: 27, bucket: "21-30", flag: "🇬🇧" },
-  burns: { name: "Sam Burns", owgr: 28, bucket: "21-30", flag: "🇺🇸" },
-  lowry: { name: "Shane Lowry", owgr: 29, bucket: "21-30", flag: "🇮🇪" },
-  cantlay: { name: "Patrick Cantlay", owgr: 30, bucket: "21-30", flag: "🇺🇸" },
+  cyoung: { name: "Cameron Young", owgr: 3, bucket: "21-30", flag: "🇺🇸" },
+  fitzpatrick: { name: "Matt Fitzpatrick", owgr: 6, bucket: "21-30", flag: "🇬🇧" },
+  hatton: { name: "Tyrrell Hatton", owgr: 31, bucket: "21-30", flag: "🇬🇧" },
+  rai: { name: "Aaron Rai", owgr: 39, bucket: "21-30", flag: "🇬🇧" },
+  burns: { name: "Sam Burns", owgr: 33, bucket: "21-30", flag: "🇺🇸" },
+  lowry: { name: "Shane Lowry", owgr: 32, bucket: "21-30", flag: "🇮🇪" },
+  cantlay: { name: "Patrick Cantlay", owgr: 35, bucket: "21-30", flag: "🇺🇸" },
   // Bucket 31-40
-  penge: { name: "Marco Penge", owgr: 31, bucket: "31-40", flag: "🇬🇧" },
-  conners: { name: "Corey Conners", owgr: 32, bucket: "31-40", flag: "🇨🇦" },
-  dechambeau: { name: "Bryson DeChambeau", owgr: 33, bucket: "31-40", flag: "🇺🇸" },
-  day: { name: "Jason Day", owgr: 34, bucket: "31-40", flag: "🇦🇺" },
+  penge: { name: "Marco Penge", owgr: 37, bucket: "31-40", flag: "🇬🇧" },
+  conners: { name: "Corey Conners", owgr: 44, bucket: "31-40", flag: "🇨🇦" },
+  dechambeau: { name: "Bryson DeChambeau", owgr: 24, bucket: "31-40", flag: "🇺🇸" },
+  day: { name: "Jason Day", owgr: 41, bucket: "31-40", flag: "🇦🇺" },
   // Bucket 40+
-  mkim: { name: "Michael Kim", owgr: 41, bucket: "40+", flag: "🇺🇸" },
-  harman: { name: "Brian Harman", owgr: 46, bucket: "40+", flag: "🇺🇸" },
-  bhatia: { name: "Akshay Bhatia", owgr: 48, bucket: "40+", flag: "🇺🇸" },
-  nhoigaard: { name: "Nicolai Hoigaard", owgr: 50, bucket: "40+", flag: "🇩🇰" },
-  mwlee: { name: "Min Woo Lee", owgr: 52, bucket: "40+", flag: "🇦🇺" },
-  berger: { name: "Daniel Berger", owgr: 53, bucket: "40+", flag: "🇺🇸" },
-  wclark: { name: "Wyndham Clark", owgr: 56, bucket: "40+", flag: "🇺🇸" },
-  knapp: { name: "Jake Knapp", owgr: 62, bucket: "40+", flag: "🇺🇸" },
-  echavarria: { name: "Nico Echavarria", owgr: 65, bucket: "40+", flag: "🇨🇴" },
-  rahm: { name: "Jon Rahm", owgr: 67, bucket: "40+", flag: "🇪🇸" },
-  hli: { name: "Haotong Li", owgr: 68, bucket: "40+", flag: "🇨🇳" },
-  homa: { name: "Max Homa", owgr: 78, bucket: "40+", flag: "🇺🇸" },
-  ascott: { name: "Adam Scott", owgr: 80, bucket: "40+", flag: "🇦🇺" },
-  spieth: { name: "Jordan Spieth", owgr: 85, bucket: "40+", flag: "🇺🇸" },
-  woodland: { name: "Gary Woodland", owgr: 95, bucket: "40+", flag: "🇺🇸" },
-  koepka: { name: "Brooks Koepka", owgr: 100, bucket: "40+", flag: "🇺🇸" },
-  zjohnson: { name: "Zach Johnson", owgr: 200, bucket: "40+", flag: "🇺🇸" },
+  mkim: { name: "Michael Kim", owgr: 43, bucket: "40+", flag: "🇺🇸" },
+  harman: { name: "Brian Harman", owgr: 50, bucket: "40+", flag: "🇺🇸" },
+  bhatia: { name: "Akshay Bhatia", owgr: 21, bucket: "40+", flag: "🇺🇸" },
+  nhoigaard: { name: "Nicolai Højgaard", owgr: 36, bucket: "40+", flag: "🇩🇰" },
+  mwlee: { name: "Min Woo Lee", owgr: 25, bucket: "40+", flag: "🇦🇺" },
+  berger: { name: "Daniel Berger", owgr: 38, bucket: "40+", flag: "🇺🇸" },
+  wclark: { name: "Wyndham Clark", owgr: 78, bucket: "40+", flag: "🇺🇸" },
+  knapp: { name: "Jake Knapp", owgr: 42, bucket: "40+", flag: "🇺🇸" },
+  echavarria: { name: "Nico Echavarria", owgr: 40, bucket: "40+", flag: "🇨🇴" },
+  rahm: { name: "Jon Rahm", owgr: 30, bucket: "40+", flag: "🇪🇸" },
+  hli: { name: "Haotong Li", owgr: 84, bucket: "40+", flag: "🇨🇳" },
+  homa: { name: "Max Homa", owgr: 163, bucket: "40+", flag: "🇺🇸" },
+  ascott: { name: "Adam Scott", owgr: 53, bucket: "40+", flag: "🇦🇺" },
+  spieth: { name: "Jordan Spieth", owgr: 61, bucket: "40+", flag: "🇺🇸" },
+  woodland: { name: "Gary Woodland", owgr: 52, bucket: "40+", flag: "🇺🇸" },
+  koepka: { name: "Brooks Koepka", owgr: 169, bucket: "40+", flag: "🇺🇸" },
+  zjohnson: { name: "Zach Johnson", owgr: 320, bucket: "40+", flag: "🇺🇸" },
 };
 
 const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", t: "#fff" }, "21-30": { bg: "#3d7a52", t: "#fff" }, "31-40": { bg: "#5a9a6e", t: "#fff" }, "40+": { bg: "#7ab88a", t: "#1a472a" } };
+const BUCKET_ORDER = { "1-10": 0, "11-20": 1, "21-30": 2, "31-40": 3, "40+": 4 };
+const sortPicksByBucket = (picks) => [...picks].sort((a, b) => (BUCKET_ORDER[P[a]?.bucket] ?? 9) - (BUCKET_ORDER[P[b]?.bucket] ?? 9));
 
 // 43 Entrants — picks read from submitted table
 const ENTRANTS = [
@@ -116,8 +120,8 @@ const ENTRANTS = [
   { name: "H.Willis", picks: ["scheffler", "aberg", "rahm", "nhoigaard", "conners"], paid: true },
   { name: "E.Stringer", picks: ["fitzpatrick", "aberg", "rahm", "hatton", "zjohnson"], paid: true },
   { name: "L.Swindell", picks: ["scheffler", "gotterup", "rahm", "lowry", "conners"], paid: false },
-  { name: "M.Van Der Vorm", picks: ["mcilroy", "matsuyama", "dechambeau", "lowry", "ascott"], paid: false },
-  { name: "A.Breakspear", picks: ["scheffler", "aberg", "bhatia", "penge", "conners"], paid: true },
+  { name: "M.Van Der Vorm", picks: ["mcilroy", "matsuyama", "dechambeau", "lowry", "ascott"], paid: true },
+  { name: "A.Breakspear", picks: ["scheffler", "aberg", "bhatia", "penge", "conners"], paid: false },
   { name: "T.Harty", picks: ["fleetwood", "aberg", "mwlee", "nhoigaard", "day"], paid: false },
   { name: "R.Harty", picks: ["scheffler", "matsuyama", "rahm", "cantlay", "day"], paid: false },
   { name: "M.Harty", picks: ["schauffele", "jthomas", "dechambeau", "cantlay", "lowry"], paid: false },
@@ -152,7 +156,7 @@ const TABS = [
 /* ═══ HELPERS ═══ */
 const OWGR_URL = "https://www.owgr.com/ranking";
 const owgrLink = { color: "#1a472a", textDecoration: "underline", textDecorationColor: "rgba(26,71,42,0.3)", cursor: "pointer" };
-const OL = ({ rank, style: st }) => <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{ ...owgrLink, ...st }} onClick={e => e.stopPropagation()}>#{rank}</a>;
+const OL = ({ rank, style: st }) => <span style={{ ...st }}>#{rank}</span>;
 
 const getTotal = (e, lpm) => e.picks.reduce((s, k) => s + (lpm[k]?.earnings || 0), 0);
 const fmtD = (v) => v ? `$${(v / 1000).toFixed(0)}k` : "—";
@@ -435,7 +439,7 @@ export default function App() {
         {tab === "rules" && <RulesView />}
       </main>
 
-      <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{color:"#1a472a",fontWeight:600}}>owgr.com</a></footer>
+      <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via owgr.com</footer>
     </div>
   );
 }
@@ -456,14 +460,14 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
                 <div style={s.avatar}>{isLive ? <span style={{ fontSize: 11 }}>{i + 1}</span> : e.name[0]}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15, color: "#1a472a" }}>{e.name}{!e.paid && <span style={{ fontSize: 9, color: "#c0392b", fontWeight: 600, marginLeft: 6 }}>UNPAID</span>}</div>
-                  <div style={{ fontSize: 11, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.picks.map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(" · ")}</div>
+                  <div style={{ fontSize: 11, color: "#888", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sortPicksByBucket(e.picks).map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(" · ")}</div>
                 </div>
                 {isLive && tot > 0 && <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a", flexShrink: 0 }}>{fmtD(tot)}</div>}
                 <div style={{ fontSize: 10, color: "#999", flexShrink: 0, marginLeft: 4 }}>{open ? "▲" : "▼"}</div>
               </div>
               {open && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #eee" }}>
-                  {e.picks.map(k => { const p = P[k], l = lpm[k]; return (
+                  {sortPicksByBucket(e.picks).map(k => { const p = P[k], l = lpm[k]; return (
                     <div key={k} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 13 }}>
                       <span style={{ ...s.bucket, backgroundColor: BC[p.bucket].bg, color: BC[p.bucket].t }}>{p.bucket}</span>
                       <span>{p.flag}</span>
@@ -501,7 +505,7 @@ function MainView({ ents, lpm, isLive }) {
           <tr key={e.name} style={i % 2 === 0 ? s.re : {}}>
             <td style={s.td}><span style={s.pos}>{i + 1}</span></td>
             <td style={{ ...s.td, fontWeight: 600 }}>{e.name}</td>
-            <td style={{ ...s.td, fontSize: 11, color: "#666", whiteSpace: "normal" }}>{e.picks.map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(", ")}</td>
+            <td style={{ ...s.td, fontSize: 11, color: "#666", whiteSpace: "normal" }}>{sortPicksByBucket(e.picks).map(p => { const l = lpm[p]; return l ? `${sn(p)}(${l.toPar})` : sn(p); }).join(", ")}</td>
             <td style={{ ...s.td, textAlign: "right", fontWeight: 700 }}>{t > 0 ? fmtFull(t) : "—"}</td>
           </tr>); })}
       </TW>
@@ -588,7 +592,7 @@ function RulesView() {
       <H2 t="How It Works" sub="Three games, one team of five" />
       {[
         { icon: "🎫", title: "Entry Fee", text: "£10 per entry (43 entrants = £430 pool). Payment to: 04-00-04 / 64310053. Submit picks via WhatsApp in rank order with your name at the top." },
-        { icon: "🏌️", title: "Player Selection", text: <span>Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+. All must be confirmed starters. Check rankings at <a href={OWGR_URL} target="_blank" rel="noopener noreferrer" style={{color:"#1a472a",fontWeight:600}}>owgr.com/ranking</a>.</span> },
+        { icon: "🏌️", title: "Player Selection", text: <span>Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+. All must be confirmed starters. Check rankings at owgr.com/ranking.</span> },
         { icon: "🏆", title: "Game 1 — Main Game (£350)", text: "Your 5-player team competes on total prize money earned across the tournament. Highest combined total wins." },
         { icon: "📉", title: "Game 2 — Lowest Single Round (£40)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
         { icon: "📈", title: "Game 3 — Out Performer (£40)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
