@@ -144,7 +144,7 @@ const ENTRANTS = [
   { name: "J.Gambler", picks: ["mcilroy", "aberg", "reed", "hatton", "harman"], paid: false },
   { name: "M.Lowen", picks: ["rose", "aberg", "rahm", "burns", "harman"], paid: true },
   { name: "E.Morley-Smith", picks: ["cyoung", "aberg", "dechambeau", "hatton", "day"], paid: true },
-  { name: "G.Morley-Smith", picks: ["fitzpatrick", "matsuyama", "bhatia", "hatton", "day"], paid: true },
+  { name: "G.Morley-Smith", picks: ["fitzpatrick", "matsuyama", "bhatia", "lowry", "harman"], paid: true },
   { name: "L.Butler", picks: ["morikawa", "aberg", "rahm", "hatton", "koepka"], paid: true },
   { name: "J.Cunningham", picks: ["scheffler", "aberg", "dechambeau", "hatton", "day"], paid: false },
   { name: "L.Hunt", picks: ["scheffler", "jthomas", "dechambeau", "lowry", "wclark"], paid: true },
