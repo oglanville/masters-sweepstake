@@ -260,7 +260,7 @@ const ENTRANTS = [
   { name: "S.Glanville", picks: ["mcilroy", "aberg", "mwlee", "hatton", "day"], paid: false },
   { name: "T.Ishmael", picks: ["scheffler", "aberg", "rahm", "cantlay", "koepka"], paid: true },
   { name: "J.Campling", picks: ["fitzpatrick", "gotterup", "rahm", "berger", "spieth"], paid: true },
-  { name: "O.Mays", picks: ["rose", "aberg", "dechambeau", "cantlay", "mkim"], paid: true },
+  { name: "O.Mays", picks: ["macintyre", "aberg", "dechambeau", "cantlay", "mkim"], paid: true },
   { name: "H.Ball", picks: ["mcilroy", "aberg", "bhatia", "lowry", "conners"], paid: true },
   { name: "G.Bilson", picks: ["schauffele", "aberg", "dechambeau", "rai", "echavarria"], paid: true },
   { name: "B.Cook", picks: ["cyoung", "gotterup", "rahm", "cantlay", "conners"], paid: true },
@@ -357,25 +357,55 @@ function sortLR(ents, lpm) {
   GAME 3 — OUT PERFORMER
   ══════════════════════════════════════════════════
 */
+
+/* Derive leaderboard positions from toParValue when ESPN doesn't provide position.
+   Groups ties correctly (e.g. three players at -4 all get position 5). */
+function derivedPositions(lpm) {
+  const active = Object.values(lpm).filter(p => !p.isCut && p.toParValue != null);
+  active.sort((a, b) => a.toParValue - b.toParValue);
+  const map = {};
+  let i = 0;
+  while (i < active.length) {
+    let j = i;
+    while (j < active.length && active[j].toParValue === active[i].toParValue) j++;
+    const pos = i + 1; // tied position
+    for (let k = i; k < j; k++) map[active[k].name] = pos;
+    i = j;
+  }
+  return map;
+}
+
 function getOPRanking(entrant, lpm) {
-  return entrant.picks
-    .map(k => {
-      const p = P[k], lp = lpm[k];
-      const fin = lp?.position || null, cut = lp?.isCut || false;
-      const places = fin && !cut ? (p?.owgr || 0) - fin : null;
-      return { key: k, name: p?.name, owgr: p?.owgr, finish: fin, places, isCut: cut };
-    })
-    .sort((a, b) => {
-      if (a.places === null && b.places === null) return 0;
-      if (a.places === null) return 1;
-      if (b.places === null) return -1;
-      return b.places - a.places;
-    });
+  const dPos = derivedPositions(lpm);
+  const all = entrant.picks.map(k => {
+    const p = P[k], lp = lpm[k];
+    const cut = lp?.isCut || false;
+    const fin = (lp?.position != null && lp.position > 0)
+      ? lp.position
+      : (lp?.name ? dPos[lp.name] ?? null : null);
+    const hasLiveScore = lp?.toParValue != null;
+    const places = fin && !cut ? (p?.owgr || 0) - fin : null;
+    return { key: k, name: p?.name, owgr: p?.owgr, finish: fin, places, isCut: cut, hasLiveScore };
+  });
+
+  /* Separate non-cut (eligible) from cut players.
+     Only non-cut players count for Game 3. Cut players are appended
+     at the end purely for display ("all cut" messaging). */
+  const eligible = all.filter(r => !r.isCut).sort((a, b) => {
+    if (a.places === null && b.places === null) return 0;
+    if (a.places === null) return 1;
+    if (b.places === null) return -1;
+    return b.places - a.places;
+  });
+  const cutPlayers = all.filter(r => r.isCut);
+
+  return [...eligible, ...cutPlayers];
 }
 
 function sortOP(ents, lpm) {
   return [...ents].sort((a, b) => {
-    const ar = getOPRanking(a, lpm), br = getOPRanking(b, lpm);
+    const ar = getOPRanking(a, lpm).filter(r => !r.isCut);
+    const br = getOPRanking(b, lpm).filter(r => !r.isCut);
     const a1 = ar[0]?.places ?? -999, b1 = br[0]?.places ?? -999;
     if (a1 !== b1) return b1 - a1;
     const a2 = ar[1]?.places ?? -999, b2 = br[1]?.places ?? -999;
@@ -730,9 +760,13 @@ function OPView({ ents, lpm }) {
       <TW heads={["Pos", "Name", "Best Riser", "+/−"]}>
         {sorted.map((e, i) => {
           const rank = getOPRanking(e, lpm);
-          const best = rank[0];
-          const hasLiveData = rank.some(r => r.finish || r.isCut);
-          const tbs = rank.filter((_, ri) => ri > 0 && rank[ri].places != null).slice(0, 2);
+          /* rank is sorted: eligible (non-cut) first, cut players appended at end */
+          const eligible = rank.filter(r => !r.isCut);
+          const allCut = eligible.length === 0 && rank.some(r => r.isCut);
+          const best = eligible[0] || null;
+          const hasLiveData = rank.some(r => r.finish || r.isCut || r.hasLiveScore);
+          const tbs = eligible.filter((_, ri) => ri > 0 && eligible[ri]?.places != null).slice(0, 2);
+          const cutCount = rank.filter(r => r.isCut).length;
 
           /* Pre-tournament fallback: pick the player with the highest OWGR
              (most room to outperform) when no live positions exist yet */
@@ -747,30 +781,33 @@ function OPView({ ents, lpm }) {
               <td style={s.td}><span style={s.pos}>{i + 1}</span></td>
               <td style={{ ...s.td, fontWeight: 600, fontSize: 13 }}>{e.name}</td>
               <td style={{ ...s.td, whiteSpace: "normal" }}>
-                {hasLiveData ? (<>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: best?.isCut ? "#c0392b" : "#1a472a" }}>
-                    {P[best?.key]?.flag} {best?.name}
+                {hasLiveData ? (allCut ? (
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#c0392b" }}>All players missed the cut</div>
+                    <div style={{ fontSize: 10, color: "#999", marginTop: 2 }}>{cutCount} of 5 eliminated</div>
                   </div>
-                  {best && (best.isCut
-                    ? <div style={{ fontSize: 11, color: "#c0392b", fontWeight: 600 }}>MISSED CUT</div>
-                    : best.finish && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>OWGR</span>
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: "#f0ebe1", color: "#555", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
-                            {best.owgr}
-                          </span>
-                        </div>
-                        <span style={{ fontSize: 14, color: "#999" }}>→</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>LIVE</span>
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: best.places > 0 ? "#d4edda" : "#f8d7da", color: best.places > 0 ? "#155724" : "#721c24", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
-                            T{best.finish}
-                          </span>
-                        </div>
+                ) : best ? (<>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a" }}>
+                    {P[best.key]?.flag} {best.name}
+                  </div>
+                  {best.finish ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>OWGR</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: "#f0ebe1", color: "#555", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
+                          {best.owgr}
+                        </span>
                       </div>
-                    )
-                  )}
+                      <span style={{ fontSize: 14, color: "#999" }}>→</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>LIVE</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: best.places > 0 ? "#d4edda" : "#f8d7da", color: best.places > 0 ? "#155724" : "#721c24", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
+                          T{best.finish}
+                        </span>
+                      </div>
+                    </div>
+                  ) : <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>Awaiting position…</div>}
+                  {cutCount > 0 && <div style={{ fontSize: 10, color: "#c0392b", marginTop: 3 }}>{cutCount} player{cutCount > 1 ? "s" : ""} cut</div>}
                   {tbs.length > 0 && <div style={{ marginTop: 4, paddingTop: 4, borderTop: "1px dashed #e0ddd5" }}>
                     <div style={{ fontSize: 9, color: "#999", textTransform: "uppercase", fontWeight: 700, marginBottom: 2 }}>Tiebreak</div>
                     {tbs.map(tb => (
@@ -783,7 +820,8 @@ function OPView({ ents, lpm }) {
                       </div>
                     ))}
                   </div>}
-                </>) : preTourneyPick ? (<>
+                </>) : <span style={{ fontSize: 12, color: "#888" }}>Waiting for data</span>
+                ) : preTourneyPick ? (<>
                   <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a" }}>
                     {preTourneyPick.flag} {preTourneyPick.name}
                   </div>
@@ -805,7 +843,7 @@ function OPView({ ents, lpm }) {
                 </>) : <span style={{ fontSize: 12, color: "#888" }}>—</span>}
               </td>
               <td style={{ ...s.td, textAlign: "center" }}>
-                {best?.isCut ? <span style={{ fontWeight: 700, color: "#c0392b", fontSize: 11 }}>CUT</span>
+                {allCut ? <span style={{ fontWeight: 700, color: "#c0392b", fontSize: 11 }}>CUT</span>
                   : best && best.places != null ? <span style={{ fontWeight: 800, fontSize: 18, color: best.places > 0 ? "#155724" : "#721c24" }}>{best.places > 0 ? "+" : ""}{best.places}</span>
                   : <span style={{ color: "#999", fontSize: 12 }}>—</span>}
               </td>
