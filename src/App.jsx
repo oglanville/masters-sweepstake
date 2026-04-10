@@ -15,13 +15,61 @@ function useLiveData() {
       let ev = evs.find(e => e.name?.toLowerCase().includes("masters")) || evs[0];
       if (!ev) { setLd({ status: "no-event", players: [] }); setLoading(false); setTs(new Date()); return; }
       const comp = ev.competitions?.[0];
+      /* FIX 5: ESPN golf returns competitor.score as a plain string (e.g. "-2", "E"),
+         not an object. Linescores items can also be strings or objects depending on state.
+         Position is most reliable via displayName (strip "T" prefix for ties). */
+      const parseScoreStr = (v) => {
+        if (v == null || v === "" || v === "-") return null;
+        if (v === "E" || v === "e") return 0;
+        const n = parseInt(v, 10);
+        return Number.isNaN(n) ? null : n;
+      };
       const players = (comp?.competitors || []).map(c => {
         const a = c.athlete || {};
-        /* FIX 2: treat "E" round score as 0 (even par) so it counts in lowest-round game */
-        const rounds = (c.linescores || []).map(ls => ({
-          score: ls.displayValue === "E" ? 0 : (parseInt(ls.displayValue) || null)
-        }));
-        return { name: a.displayName || "", position: parseInt(c.status?.position?.id) || null, positionDisplay: c.status?.position?.displayName || "—", toPar: c.score?.displayValue || "E", toParValue: c.score?.value ?? null, rounds, earnings: c.earnings ? parseFloat(c.earnings) : 0, isCut: c.status?.type?.name === "STATUS_CUT" };
+        /* score can be: object {displayValue, value}, a raw string like "-2"/"E", or a number */
+        const rawScore = c.score;
+        let toPar, toParValue;
+        if (rawScore && typeof rawScore === "object") {
+          toPar = rawScore.displayValue || "E";
+          toParValue = rawScore.value ?? parseScoreStr(rawScore.displayValue);
+        } else if (typeof rawScore === "string") {
+          toPar = rawScore || "E";
+          toParValue = parseScoreStr(rawScore);
+        } else if (typeof rawScore === "number") {
+          toPar = rawScore === 0 ? "E" : (rawScore > 0 ? `+${rawScore}` : `${rawScore}`);
+          toParValue = rawScore;
+        } else {
+          toPar = "E";
+          toParValue = null;
+        }
+
+        /* rounds: item may be object {value, displayValue} or raw value */
+        const rounds = (c.linescores || []).map(ls => {
+          if (ls && typeof ls === "object") {
+            if (ls.value != null && typeof ls.value === "number") return { score: ls.value };
+            return { score: parseScoreStr(ls.displayValue) };
+          }
+          return { score: parseScoreStr(ls) };
+        });
+
+        /* Position: prefer displayName ("T5" → 5), fall back to id */
+        const posDisp = c.status?.position?.displayName || "";
+        const position = parseInt(posDisp.replace(/^T/i, ""), 10) || parseInt(c.status?.position?.id, 10) || null;
+
+        /* Earnings: sometimes on competitor directly, sometimes nested */
+        const earningsRaw = c.earnings ?? c.status?.earnings ?? 0;
+        const earnings = earningsRaw ? parseFloat(earningsRaw) : 0;
+
+        return {
+          name: a.displayName || "",
+          position,
+          positionDisplay: posDisp || "—",
+          toPar,
+          toParValue,
+          rounds,
+          earnings,
+          isCut: c.status?.type?.name === "STATUS_CUT"
+        };
       });
       const st = ev.status?.type?.name || "STATUS_SCHEDULED";
       setLd({ status: st === "STATUS_FINAL" ? "complete" : st === "STATUS_IN_PROGRESS" ? "live" : "pre-tournament", statusDetail: ev.status?.type?.detail || "", players });
