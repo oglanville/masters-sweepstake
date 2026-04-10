@@ -50,13 +50,17 @@ function useLiveData() {
           toParValue = null;
         }
 
-        /* rounds: item may be object {value, displayValue} or raw value */
-        const rounds = (c.linescores || []).map(ls => {
+        /* rounds: item may be object {value, displayValue} or raw value.
+           Store 1-indexed round number so we can display "R2" etc. for the best round. */
+        const rounds = (c.linescores || []).map((ls, idx) => {
+          let score;
           if (ls && typeof ls === "object") {
-            if (ls.value != null && typeof ls.value === "number") return { score: ls.value };
-            return { score: parseScoreStr(ls.displayValue) };
+            if (ls.value != null && typeof ls.value === "number") score = ls.value;
+            else score = parseScoreStr(ls.displayValue);
+          } else {
+            score = parseScoreStr(ls);
           }
-          return { score: parseScoreStr(ls) };
+          return { round: idx + 1, score };
         });
 
         /* Position: prefer displayName ("T5" → 5), fall back to id */
@@ -315,14 +319,25 @@ function ScoreBadge({ toPar, toParValue }) {
 function getPlayerBestRound(k, lpm) {
   const r = lpm[k]?.rounds;
   if (!r?.length) return null;
-  /* FIX 2: 0 (E) is a valid score — filter null only, not falsy */
-  const s = r.map(x => x.score).filter(x => x !== null);
-  return s.length ? Math.min(...s) : null;
+  /* FIX 2: 0 (E) is a valid score — filter null only, not falsy.
+     COMPLETED ROUNDS ONLY: a full 18 at Augusta is always ≥55 strokes, so anything
+     below that (including 0) is a round that hasn't been played yet or is in progress. */
+  const completed = r.filter(x => x.score !== null && x.score >= 55);
+  if (!completed.length) return null;
+  return completed.reduce((best, cur) => (cur.score < best.score ? cur : best));
 }
 
 function getLRRanking(entrant, lpm) {
   return entrant.picks
-    .map(k => ({ key: k, name: P[k]?.name, bestRound: getPlayerBestRound(k, lpm) }))
+    .map(k => {
+      const best = getPlayerBestRound(k, lpm);
+      return {
+        key: k,
+        name: P[k]?.name,
+        bestRound: best?.score ?? null,
+        roundNum: best?.round ?? null,
+      };
+    })
     .filter(x => x.bestRound !== null)
     .sort((a, b) => a.bestRound - b.bestRound);
 }
@@ -424,14 +439,15 @@ function PTV({ entrant, all, lpm }) {
           </div>
         ))}
       </GS>
-      <GS emoji="📉" title="Lowest Round" badge={lrRank[0] ? `Best: ${lrRank[0].bestRound}` : null} open={og === "l"} toggle={() => t("l")}>
-        <Chip b="Auto" t="info" title="Best rounds from your 5 players">
+      <GS emoji="📉" title="Lowest Round" badge={lrRank[0] ? `Best: ${lrRank[0].bestRound} (R${lrRank[0].roundNum})` : null} open={og === "l"} toggle={() => t("l")}>
+        <Chip b="Auto" t="info" title="Best completed rounds from your 5 players">
           {lrRank.length > 0 ? lrRank.map((r, i) => (
             <div key={r.key} style={{ fontSize: 12, marginBottom: 2, fontWeight: i === 0 ? 700 : 400, color: i === 0 ? "#1a472a" : "#555" }}>
               {i === 0 ? "★ " : "  "}{r.name} — <span style={i === 0 ? { background: "#d4edda", padding: "1px 5px", borderRadius: 3, fontWeight: 800 } : {}}>{r.bestRound}</span>
+              <span style={{ fontSize: 10, color: "#888", marginLeft: 4, fontWeight: 600 }}>R{r.roundNum}</span>
               {i === 1 && <span style={{ fontSize: 10, color: "#999", marginLeft: 6 }}>(tiebreak)</span>}
             </div>
-          )) : <div style={{ fontSize: 12, color: "#888" }}>No rounds completed yet.</div>}
+          )) : <div style={{ fontSize: 12, color: "#888" }}>No completed rounds yet.</div>}
         </Chip>
       </GS>
       <GS emoji="📈" title="Out Performer" badge={opRank[0]?.places != null ? `${opRank[0].places > 0 ? "+" : ""}${opRank[0].places}` : null} open={og === "o"} toggle={() => t("o")}>
@@ -495,7 +511,7 @@ function HomeView({ ents, lpm, isLive }) {
       {[
         /* FIX 3: fmtM for main game — projected indicator */
         { title: "🏆 Main Game", sub: anyOfficial(lpm) ? "Total Prize Money" : "Projected Prize Money", data: ms, detail: e => { const t = getTotal(e, lpm); return isLive && t > 0 ? `${anyOfficial(lpm) ? "" : "~"}${fmtM(t)}` : "—"; } },
-        { title: "📉 Lowest Round", sub: "Best Single Round", data: ls, detail: e => { const r = getLRRanking(e, lpm); return r[0] ? `${r[0].bestRound} (${sn(r[0].key)})` : "—"; } },
+        { title: "📉 Lowest Round", sub: "Best Single Round", data: ls, detail: e => { const r = getLRRanking(e, lpm); return r[0] ? `${r[0].bestRound} R${r[0].roundNum} (${sn(r[0].key)})` : "—"; } },
         { title: "📈 Out Performer", sub: "Places vs OWGR", data: os, detail: e => { const r = getOPRanking(e, lpm); return r[0]?.places != null ? `+${r[0].places} (${sn(r[0].key)})` : "—"; } },
       ].map(g => (
         <div key={g.title} style={hm.pod}>
@@ -634,7 +650,7 @@ function PicksView({ ents, exp, setExp, lpm, isLive }) {
                     );
                   })}
                   <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 10, borderTop: "1px dashed #e0ddd5" }}>
-                    <ML label="Best Round" value={lrRank[0] ? `${lrRank[0].bestRound} (${sn(lrRank[0].key)})` : "—"} />
+                    <ML label="Best Round" value={lrRank[0] ? `${lrRank[0].bestRound} R${lrRank[0].roundNum} (${sn(lrRank[0].key)})` : "—"} />
                     <ML label="Best Out Perf" value={opRank[0]?.places != null ? `${opRank[0].places > 0 ? "+" : ""}${opRank[0].places} (${sn(opRank[0].key)})` : "—"} />
                   </div>
                   <PTV entrant={e} all={ents} lpm={lpm} />
@@ -673,7 +689,7 @@ function LRView({ ents, lpm }) {
   const sorted = sortLR(ents, lpm);
   return (
     <div>
-      <H2 t="Lowest Round" sub="Auto-picks best round from your 5 players · Tiebreak: next player's best" />
+      <H2 t="Lowest Round" sub="Auto-picks best completed round from your 5 players · Tiebreak: next player's best" />
       <TW heads={["Pos", "Name", "Players & Rounds", "Best"]}>
         {sorted.map((e, i) => {
           const rank = getLRRanking(e, lpm);
@@ -686,12 +702,18 @@ function LRView({ ents, lpm }) {
                   <div key={r.key} style={{ fontSize: 12, marginBottom: 2, color: ri === 0 ? "#1a472a" : "#777" }}>
                     <span style={{ fontWeight: ri === 0 ? 700 : 400 }}>{P[r.key]?.flag} {r.name}</span>
                     <span style={{ marginLeft: 4, ...(ri === 0 ? { fontWeight: 800, background: "#d4edda", padding: "1px 4px", borderRadius: 3 } : {}) }}>{r.bestRound}</span>
+                    <span style={{ marginLeft: 4, fontSize: 10, color: "#888", fontWeight: 600 }}>R{r.roundNum}</span>
                     {ri === 1 && <span style={{ fontSize: 10, color: "#999", marginLeft: 4 }}>(TB)</span>}
                   </div>
-                )) : <span style={{ fontSize: 12, color: "#888" }}>No rounds yet</span>}
+                )) : <span style={{ fontSize: 12, color: "#888" }}>No completed rounds yet</span>}
               </td>
               <td style={{ ...s.td, textAlign: "center" }}>
-                {rank[0] ? <span style={{ fontWeight: 800, fontSize: 18, color: "#1a472a" }}>{rank[0].bestRound}</span> : "—"}
+                {rank[0] ? (
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 18, color: "#1a472a", lineHeight: 1 }}>{rank[0].bestRound}</div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.3px", marginTop: 2 }}>Round {rank[0].roundNum}</div>
+                  </div>
+                ) : "—"}
               </td>
             </tr>);
         })}
