@@ -260,7 +260,7 @@ const ENTRANTS = [
   { name: "S.Glanville", picks: ["mcilroy", "aberg", "mwlee", "hatton", "day"], paid: false },
   { name: "T.Ishmael", picks: ["scheffler", "aberg", "rahm", "cantlay", "koepka"], paid: true },
   { name: "J.Campling", picks: ["fitzpatrick", "gotterup", "rahm", "berger", "spieth"], paid: true },
-  { name: "O.Mays", picks: ["macintyre", "aberg", "dechambeau", "cantlay", "mkim"], paid: true },
+  { name: "O.Mays", picks: ["rose", "aberg", "dechambeau", "cantlay", "mkim"], paid: true },
   { name: "H.Ball", picks: ["mcilroy", "aberg", "bhatia", "lowry", "conners"], paid: true },
   { name: "G.Bilson", picks: ["schauffele", "aberg", "dechambeau", "rai", "echavarria"], paid: true },
   { name: "B.Cook", picks: ["cyoung", "gotterup", "rahm", "cantlay", "conners"], paid: true },
@@ -726,8 +726,8 @@ function OPView({ ents, lpm }) {
   const sorted = sortOP(ents, lpm);
   return (
     <div>
-      <H2 t="Out Performer" sub="Auto-picks biggest riser from your 5 · Tiebreak: next biggest riser" />
-      <TW heads={["Pos", "Name", "Player Breakdown", "+/−"]}>
+      <H2 t="Out Performer" sub="Auto-picks biggest riser from your 5 · Pre-tournament OWGR vs Live Position" />
+      <TW heads={["Pos", "Name", "Best Riser", "+/−"]}>
         {sorted.map((e, i) => {
           const rank = getOPRanking(e, lpm);
           const best = rank[0];
@@ -740,15 +740,39 @@ function OPView({ ents, lpm }) {
               <td style={{ ...s.td, whiteSpace: "normal" }}>
                 {hasData ? (<>
                   <div style={{ fontWeight: 700, fontSize: 13, color: best?.isCut ? "#c0392b" : "#1a472a" }}>
-                    {P[best?.key]?.flag} {best?.name} <span style={{ fontWeight: 400, fontSize: 10, color: "#888" }}><OL rank={best?.owgr} style={{color:"#888",fontSize:10}}/></span>
+                    {P[best?.key]?.flag} {best?.name}
                   </div>
                   {best && (best.isCut
                     ? <div style={{ fontSize: 11, color: "#c0392b", fontWeight: 600 }}>MISSED CUT</div>
-                    : best.finish && <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>T{best.finish} → <span style={{ fontWeight: 800, color: best.places > 0 ? "#155724" : "#721c24", background: best.places > 0 ? "#d4edda" : "#f8d7da", padding: "1px 5px", borderRadius: 3 }}>{best.places > 0 ? "+" : ""}{best.places}</span></div>
+                    : best.finish && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>OWGR</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: "#f0ebe1", color: "#555", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
+                            {best.owgr}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: 14, color: "#999" }}>→</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>LIVE</span>
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: best.places > 0 ? "#d4edda" : "#f8d7da", color: best.places > 0 ? "#155724" : "#721c24", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
+                            T{best.finish}
+                          </span>
+                        </div>
+                      </div>
+                    )
                   )}
-                  {tbs.length > 0 && <div style={{ marginTop: 3, paddingTop: 3, borderTop: "1px dashed #e0ddd5" }}>
-                    <div style={{ fontSize: 9, color: "#999", textTransform: "uppercase", fontWeight: 700, marginBottom: 1 }}>Tiebreak</div>
-                    {tbs.map(tb => <div key={tb.key} style={{ fontSize: 11, color: "#777" }}>{sn(tb.key)} <OL rank={tb.owgr} style={{color:"#aaa",fontSize:11}}/> → T{tb.finish}, <span style={{ fontWeight: 600, color: tb.places > 0 ? "#155724" : "#721c24" }}>{tb.places > 0 ? "+" : ""}{tb.places}</span></div>)}
+                  {tbs.length > 0 && <div style={{ marginTop: 4, paddingTop: 4, borderTop: "1px dashed #e0ddd5" }}>
+                    <div style={{ fontSize: 9, color: "#999", textTransform: "uppercase", fontWeight: 700, marginBottom: 2 }}>Tiebreak</div>
+                    {tbs.map(tb => (
+                      <div key={tb.key} style={{ fontSize: 11, color: "#777", display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                        <span>{sn(tb.key)}</span>
+                        <span style={{ color: "#aaa", fontSize: 10 }}>#{tb.owgr}</span>
+                        <span style={{ color: "#999" }}>→</span>
+                        <span style={{ fontSize: 10 }}>T{tb.finish}</span>
+                        <span style={{ fontWeight: 600, color: tb.places > 0 ? "#155724" : "#721c24", fontSize: 10 }}>{tb.places > 0 ? "+" : ""}{tb.places}</span>
+                      </div>
+                    ))}
                   </div>}
                 </>) : <span style={{ fontSize: 12, color: "#888" }}>Waiting for data</span>}
               </td>
