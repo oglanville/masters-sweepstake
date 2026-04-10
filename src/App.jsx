@@ -731,14 +731,23 @@ function OPView({ ents, lpm }) {
         {sorted.map((e, i) => {
           const rank = getOPRanking(e, lpm);
           const best = rank[0];
-          const hasData = rank.some(r => r.finish || r.isCut);
+          const hasLiveData = rank.some(r => r.finish || r.isCut);
           const tbs = rank.filter((_, ri) => ri > 0 && rank[ri].places != null).slice(0, 2);
+
+          /* Pre-tournament fallback: pick the player with the highest OWGR
+             (most room to outperform) when no live positions exist yet */
+          const preTourneyPick = !hasLiveData
+            ? e.picks
+                .map(k => ({ key: k, name: P[k]?.name, owgr: P[k]?.owgr || 0, flag: P[k]?.flag }))
+                .sort((a, b) => b.owgr - a.owgr)[0]
+            : null;
+
           return (
             <tr key={e.name} style={i % 2 === 0 ? s.re : {}}>
               <td style={s.td}><span style={s.pos}>{i + 1}</span></td>
               <td style={{ ...s.td, fontWeight: 600, fontSize: 13 }}>{e.name}</td>
               <td style={{ ...s.td, whiteSpace: "normal" }}>
-                {hasData ? (<>
+                {hasLiveData ? (<>
                   <div style={{ fontWeight: 700, fontSize: 13, color: best?.isCut ? "#c0392b" : "#1a472a" }}>
                     {P[best?.key]?.flag} {best?.name}
                   </div>
@@ -774,12 +783,31 @@ function OPView({ ents, lpm }) {
                       </div>
                     ))}
                   </div>}
-                </>) : <span style={{ fontSize: 12, color: "#888" }}>Waiting for data</span>}
+                </>) : preTourneyPick ? (<>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#1a472a" }}>
+                    {preTourneyPick.flag} {preTourneyPick.name}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>OWGR</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: "#f0ebe1", color: "#555", fontWeight: 700, fontSize: 12, padding: "0 4px" }}>
+                        {preTourneyPick.owgr}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 14, color: "#999" }}>→</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: "#999", letterSpacing: "0.3px" }}>LIVE</span>
+                      <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 28, height: 22, borderRadius: 4, background: "#e8e4db", color: "#999", fontWeight: 700, fontSize: 11, padding: "0 6px" }}>
+                        TBD
+                      </span>
+                    </div>
+                  </div>
+                </>) : <span style={{ fontSize: 12, color: "#888" }}>—</span>}
               </td>
               <td style={{ ...s.td, textAlign: "center" }}>
                 {best?.isCut ? <span style={{ fontWeight: 700, color: "#c0392b", fontSize: 11 }}>CUT</span>
                   : best && best.places != null ? <span style={{ fontWeight: 800, fontSize: 18, color: best.places > 0 ? "#155724" : "#721c24" }}>{best.places > 0 ? "+" : ""}{best.places}</span>
-                  : "—"}
+                  : <span style={{ color: "#999", fontSize: 12 }}>—</span>}
               </td>
             </tr>);
         })}
