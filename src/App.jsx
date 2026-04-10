@@ -15,6 +15,13 @@ function useLiveData() {
       let ev = evs.find(e => e.name?.toLowerCase().includes("masters")) || evs[0];
       if (!ev) { setLd({ status: "no-event", players: [] }); setLoading(false); setTs(new Date()); return; }
       const comp = ev.competitions?.[0];
+      /* FIX 7: log the first raw competitor ONCE so we can see what ESPN is actually returning.
+         Open DevTools → Console. You'll see a single object dump on first load. */
+      if (comp?.competitors?.[0] && !window.__espnDebugLogged) {
+        window.__espnDebugLogged = true;
+        // eslint-disable-next-line no-console
+        console.log("[ESPN raw competitor[0]]", JSON.parse(JSON.stringify(comp.competitors[0])));
+      }
       /* FIX 5: ESPN golf returns competitor.score as a plain string (e.g. "-2", "E"),
          not an object. Linescores items can also be strings or objects depending on state.
          Position is most reliable via displayName (strip "T" prefix for ties). */
@@ -172,23 +179,50 @@ const MASTERS_PURSE = {
   46: 46000, 47: 44000, 48: 42400, 49: 41200, 50: 40000,
 };
 
-/* Calculate projected earnings from live positions, handling ties */
+/* Calculate projected earnings from live positions, handling ties.
+   FIX 8: if no players have positions yet (very early in round 1), fall back to
+   ranking by toParValue so projected earnings still populate. */
 function calcProjectedEarnings(players) {
-  const byPos = {};
-  for (const p of players) {
-    if (p.position && !p.isCut) {
+  const active = players.filter(p => !p.isCut);
+  const anyPos = active.some(p => p.position);
+
+  let ranked;
+  if (anyPos) {
+    // Group by explicit position (handles ties correctly)
+    const byPos = {};
+    for (const p of active) {
+      if (!p.position) continue;
       if (!byPos[p.position]) byPos[p.position] = [];
       byPos[p.position].push(p);
     }
+    const map = new Map();
+    for (const [pos, group] of Object.entries(byPos)) {
+      const n = group.length;
+      const posNum = parseInt(pos);
+      let total = 0;
+      for (let i = 0; i < n; i++) total += MASTERS_PURSE[posNum + i] || 0;
+      const avg = Math.round(total / n);
+      for (const p of group) map.set(p.name, avg);
+    }
+    return map;
   }
+
+  // Fallback: sort by toParValue ascending (lower = better), group ties
+  ranked = [...active]
+    .filter(p => p.toParValue != null)
+    .sort((a, b) => a.toParValue - b.toParValue);
   const map = new Map();
-  for (const [pos, group] of Object.entries(byPos)) {
-    const n = group.length;
-    const posNum = parseInt(pos);
+  let i = 0;
+  while (i < ranked.length) {
+    let j = i;
+    while (j < ranked.length && ranked[j].toParValue === ranked[i].toParValue) j++;
+    const n = j - i;
+    const posNum = i + 1;
     let total = 0;
-    for (let i = 0; i < n; i++) total += MASTERS_PURSE[posNum + i] || 0;
+    for (let k = 0; k < n; k++) total += MASTERS_PURSE[posNum + k] || 0;
     const avg = Math.round(total / n);
-    for (const p of group) map.set(p.name, avg);
+    for (let k = i; k < j; k++) map.set(ranked[k].name, avg);
+    i = j;
   }
   return map;
 }
@@ -258,15 +292,17 @@ const fmtM = (v) => v >= 1000000 ? `$${(v / 1000000).toFixed(1)}M` : v >= 1000 ?
 const fmtFull = (v) => v ? `$${v.toLocaleString()}` : "—";
 const sn = (k) => P[k]?.name?.split(" ").pop() || k;
 
-/* ═══ SCORE BADGE ═══ FIX 4 */
+/* ═══ SCORE BADGE ═══ FIX 4 / FIX 6: under-par green, par grey, over-par red; E → 0 */
 function ScoreBadge({ toPar, toParValue }) {
   if (toPar === undefined || toPar === null) return null;
-  const v = toParValue ?? 0;
-  const bg = v < 0 ? "#fde8e8" : v > 0 ? "#f0f0f0" : "#e8f4e8";
-  const color = v < 0 ? "#c0392b" : v > 0 ? "#777" : "#27ae60";
+  const v = toParValue ?? (toPar === "E" ? 0 : parseInt(toPar, 10));
+  if (Number.isNaN(v)) return null;
+  const bg = v < 0 ? "#e8f4e8" : v > 0 ? "#fde8e8" : "#f0f0f0";
+  const color = v < 0 ? "#27ae60" : v > 0 ? "#c0392b" : "#777";
+  const label = v === 0 ? "0" : v > 0 ? `+${v}` : `${v}`;
   return (
     <span style={{ display: "inline-block", padding: "1px 5px", borderRadius: 3, background: bg, color, fontWeight: 700, fontSize: 10, marginLeft: 3 }}>
-      {toPar}
+      {label}
     </span>
   );
 }
