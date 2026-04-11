@@ -79,7 +79,23 @@ function useLiveData() {
           toParValue,
           rounds,
           earnings,
-          isCut: c.status?.type?.name === "STATUS_CUT"
+          /* FIX: detect cut/withdrawn/DQ players robustly. ESPN reports these
+             inconsistently — sometimes via status.type.name, sometimes only via
+             the position displayName ("CUT", "MC", "WD", "DQ"). Without this,
+             cut players (e.g. Zach Johnson) keep their R2 position and wrongly
+             top the Game 3 Out Performer ranking. */
+          isCut: (() => {
+            const stName = (c.status?.type?.name || "").toUpperCase();
+            const stState = (c.status?.type?.state || "").toLowerCase();
+            const stDesc = (c.status?.type?.description || "").toUpperCase();
+            const pd = (posDisp || "").toUpperCase().trim();
+            if (stName.includes("CUT") || stName.includes("WITHDRAW") || stName.includes("DISQUALIF")) return true;
+            if (stDesc === "CUT" || stDesc === "WD" || stDesc === "MC" || stDesc === "DQ" || stDesc === "WITHDRAWN") return true;
+            if (pd === "CUT" || pd === "MC" || pd === "WD" || pd === "DQ") return true;
+            /* "post" state with no numeric position = not playing (cut/WD) */
+            if (stState === "post" && !position) return true;
+            return false;
+          })()
         };
       });
       const st = ev.status?.type?.name || "STATUS_SCHEDULED";
@@ -380,9 +396,11 @@ function getOPRanking(entrant, lpm) {
   const all = entrant.picks.map(k => {
     const p = P[k], lp = lpm[k];
     const cut = lp?.isCut || false;
-    const fin = (lp?.position != null && lp.position > 0)
+    /* Cut players: force finish to null so a stale R2 position can never
+       feed into the Out Performer ranking or be shown in the UI. */
+    const fin = cut ? null : ((lp?.position != null && lp.position > 0)
       ? lp.position
-      : (lp?.name ? dPos[lp.name] ?? null : null);
+      : (lp?.name ? dPos[lp.name] ?? null : null));
     const hasLiveScore = lp?.toParValue != null;
     const places = fin && !cut ? (p?.owgr || 0) - fin : null;
     return { key: k, name: p?.name, owgr: p?.owgr, finish: fin, places, isCut: cut, hasLiveScore };
