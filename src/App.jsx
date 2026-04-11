@@ -131,6 +131,28 @@ function buildLPM(ld, db) {
       }
     }
   }
+  /* Auto-cut rule: anyone whose live position is 50 or worse is treated as cut.
+     We compute positions ourselves from toParValue (with proper tie handling, same
+     as the homepage scoreboard) and set isCut on the matched lpm entries. This is
+     the SINGLE source of truth — the scoreboard, derivedPositions, and Game 3 all
+     read isCut from here, so they can never disagree. */
+  const ranked = ld.players
+    .filter(p => !p.isCut && p.toParValue != null)
+    .sort((a, b) => a.toParValue - b.toParValue);
+  const cutNames = new Set();
+  let i = 0;
+  while (i < ranked.length) {
+    let j = i;
+    while (j < ranked.length && ranked[j].toParValue === ranked[i].toParValue) j++;
+    const tiedPos = i + 1; // shared position for the tied group
+    if (tiedPos >= 50) {
+      for (let k = i; k < j; k++) cutNames.add(ranked[k].name);
+    }
+    i = j;
+  }
+  for (const k of Object.keys(m)) {
+    if (cutNames.has(m[k].name)) m[k].isCut = true;
+  }
   return m;
 }
 
@@ -630,19 +652,34 @@ function LiveScoreboard({ ld }) {
   });
   /* Compute positions ourselves — ESPN's positionDisplay is often blank.
      Tie handling: players sharing toParValue get the same position with "T" prefix.
-     Cut players get "—" (per spec). */
+     Auto-cut rule: anyone at position 50 or worse is treated as cut (position "—",
+     greyed out). This must match buildLPM's auto-cut logic exactly. */
   const posMap = {};
+  const autoCut = new Set();
   const eligible = rows.filter(r => !r.isCut && r.toParValue != null);
   let i = 0;
   while (i < eligible.length) {
     let j = i;
     while (j < eligible.length && eligible[j].toParValue === eligible[i].toParValue) j++;
     const tied = j - i > 1;
-    const label = (tied ? "T" : "") + (i + 1);
-    for (let k = i; k < j; k++) posMap[eligible[k].name] = label;
+    const groupPos = i + 1;
+    const label = (tied ? "T" : "") + groupPos;
+    for (let k = i; k < j; k++) {
+      posMap[eligible[k].name] = label;
+      if (groupPos >= 50) autoCut.add(eligible[k].name);
+    }
     i = j;
   }
-  const posFor = p => p.isCut ? "—" : (posMap[p.name] || "—");
+  /* Re-sort so auto-cut players drop to the bottom too */
+  rows.sort((a, b) => {
+    const aCut = a.isCut || autoCut.has(a.name);
+    const bCut = b.isCut || autoCut.has(b.name);
+    if (aCut !== bCut) return aCut ? 1 : -1;
+    const av = a.toParValue ?? 999, bv = b.toParValue ?? 999;
+    return av - bv;
+  });
+  const isCutRow = p => p.isCut || autoCut.has(p.name);
+  const posFor = p => isCutRow(p) ? "—" : (posMap[p.name] || "—");
   const rdScore = (rounds, n) => {
     const r = rounds?.find(x => x.round === n);
     return (r && r.score != null && r.score !== 0) ? r.score : (r && r.score === 0 ? 0 : "—");
@@ -666,7 +703,7 @@ function LiveScoreboard({ ld }) {
           </thead>
           <tbody>
             {rows.map((p, i) => (
-              <tr key={p.name + i} style={{ borderTop: "1px solid #eee", color: p.isCut ? "#999" : "#222" }}>
+              <tr key={p.name + i} style={{ borderTop: "1px solid #eee", color: isCutRow(p) ? "#999" : "#222" }}>
                 <td style={sb.td}>{posFor(p)}</td>
                 <td style={sb.td}>{flagFor(p.name)}</td>
                 <td style={{ ...sb.td, fontWeight: 600 }}>{p.name}</td>
