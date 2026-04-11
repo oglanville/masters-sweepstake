@@ -534,7 +534,7 @@ function Chip({ b, t, title, text, children }) {
 }
 
 /* ═══ HOME ═══ */
-function HomeView({ ents, lpm, isLive }) {
+function HomeView({ ents, lpm, isLive, ld }) {
   const ms = [...ents].sort((a, b) => getTotal(b, lpm) - getTotal(a, lpm));
   const ls = sortLR(ents, lpm);
   const os = sortOP(ents, lpm);
@@ -597,9 +597,82 @@ function HomeView({ ents, lpm, isLive }) {
           </div>
         </div>
       </div>
+      <LiveScoreboard ld={ld} />
     </div>
   );
 }
+
+/* ═══ LIVE SCOREBOARD (full field) ═══ */
+function LiveScoreboard({ ld }) {
+  if (!ld?.players?.length) {
+    return (
+      <div style={hm.pay}>
+        <div style={hm.payT}>🏌️ Live Scoreboard</div>
+        <div style={{ fontSize: 12, color: "#888", marginTop: 8 }}>Waiting for live data…</div>
+      </div>
+    );
+  }
+  /* Build flag lookup from player DB by normalized name */
+  const flagFor = name => {
+    const n = norm(name || "");
+    for (const p of Object.values(P)) {
+      const dn = norm(p.name);
+      if (dn === n || initLast(dn) === initLast(n)) return p.flag;
+    }
+    return "";
+  };
+  /* Sort: non-cut by toParValue asc, then cut players at the bottom */
+  const rows = [...ld.players].sort((a, b) => {
+    if (a.isCut !== b.isCut) return a.isCut ? 1 : -1;
+    const av = a.toParValue ?? 999, bv = b.toParValue ?? 999;
+    return av - bv;
+  });
+  const rdScore = (rounds, n) => {
+    const r = rounds?.find(x => x.round === n);
+    return (r && r.score != null && r.score !== 0) ? r.score : (r && r.score === 0 ? 0 : "—");
+  };
+  return (
+    <div style={{ ...hm.pay, marginTop: 12 }}>
+      <div style={hm.payT}>🏌️ Live Scoreboard</div>
+      <div style={{ overflowX: "auto", marginTop: 10 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ background: "#f5f3ed", textAlign: "left" }}>
+              <th style={sb.th}>Pos</th>
+              <th style={sb.th}></th>
+              <th style={sb.th}>Player</th>
+              <th style={{ ...sb.th, textAlign: "center" }}>R1</th>
+              <th style={{ ...sb.th, textAlign: "center" }}>R2</th>
+              <th style={{ ...sb.th, textAlign: "center" }}>R3</th>
+              <th style={{ ...sb.th, textAlign: "center" }}>R4</th>
+              <th style={{ ...sb.th, textAlign: "center", fontWeight: 700 }}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((p, i) => (
+              <tr key={p.name + i} style={{ borderTop: "1px solid #eee", color: p.isCut ? "#999" : "#222" }}>
+                <td style={sb.td}>{p.isCut ? "CUT" : (p.positionDisplay || "—")}</td>
+                <td style={sb.td}>{flagFor(p.name)}</td>
+                <td style={{ ...sb.td, fontWeight: 600 }}>{p.name}</td>
+                <td style={{ ...sb.td, textAlign: "center" }}>{rdScore(p.rounds, 1)}</td>
+                <td style={{ ...sb.td, textAlign: "center" }}>{rdScore(p.rounds, 2)}</td>
+                <td style={{ ...sb.td, textAlign: "center" }}>{rdScore(p.rounds, 3)}</td>
+                <td style={{ ...sb.td, textAlign: "center" }}>{rdScore(p.rounds, 4)}</td>
+                <td style={{ ...sb.td, textAlign: "center", fontWeight: 700 }}>{p.toPar || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const sb = {
+  th: { padding: "6px 8px", fontSize: 11, textTransform: "uppercase", color: "#666", borderBottom: "1px solid #ddd", whiteSpace: "nowrap" },
+  td: { padding: "6px 8px", whiteSpace: "nowrap" }
+};
+
 
 /* ═══ MAIN APP ═══ */
 export default function App() {
@@ -630,7 +703,7 @@ export default function App() {
         {TABS.map(t => (<button key={t.id} onClick={() => setTab(t.id)} style={{ ...s.tab, ...(tab === t.id ? s.tabA : {}) }}>{t.label}</button>))}
       </nav>
       <main style={s.main}>
-        {tab === "home" && <HomeView ents={sorted} lpm={lpm} isLive={isLive} />}
+        {tab === "home" && <HomeView ents={sorted} lpm={lpm} isLive={isLive} ld={ld} />}
         {tab === "picks" && <PicksView ents={sorted} exp={exp} setExp={setExp} lpm={lpm} isLive={isLive} />}
         {tab === "main" && <MainView ents={sorted} lpm={lpm} isLive={isLive} />}
         {tab === "lowest" && <LRView ents={sorted} lpm={lpm} />}
