@@ -403,10 +403,11 @@ function getOPRanking(entrant, lpm) {
     const p = P[k], lp = lpm[k];
     const cut = lp?.isCut || false;
     /* Cut players: force finish to null so a stale R2 position can never
-       feed into the Out Performer ranking or be shown in the UI. */
-    const fin = cut ? null : ((lp?.position != null && lp.position > 0)
-      ? lp.position
-      : (lp?.name ? dPos[lp.name] ?? null : null));
+       feed into the Out Performer ranking or be shown in the UI.
+       Non-cut players: use derivedPositions (computed from toParValue) so Game 3
+       matches the homepage Live Scoreboard exactly. ESPN's lp.position is
+       intentionally ignored — it's often blank or stale. */
+    const fin = cut ? null : (lp?.name ? dPos[lp.name] ?? null : null);
     const hasLiveScore = lp?.toParValue != null;
     const places = fin && !cut ? (p?.owgr || 0) - fin : null;
     return { key: k, name: p?.name, owgr: p?.owgr, finish: fin, places, isCut: cut, hasLiveScore };
