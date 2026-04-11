@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Analytics } from '@vercel/analytics/react';
 
 /* ═══ ESPN API ═══ */
 const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
@@ -764,6 +765,7 @@ export default function App() {
         {tab === "rules" && <RulesView />}
       </main>
       <footer style={s.footer}>Live data from ESPN · Auto-refreshes every 60s · Rankings via owgr.com</footer>
+      <Analytics />
     </div>
   );
 }
