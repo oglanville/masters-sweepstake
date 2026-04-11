@@ -120,7 +120,13 @@ function buildLPM(ld, db) {
     for (const [k, p] of Object.entries(db)) {
       const dl = norm(p.name);
       if (dl === l || initLast(dl) === initLast(l)) {
-        if (!m[k]) m[k] = { ...lp, projectedEarnings: projMap.get(lp.name) || 0 };
+        if (!m[k]) {
+          m[k] = { ...lp, projectedEarnings: projMap.get(lp.name) || 0 };
+          /* Manual override: if the player DB marks this player as cut/withdrawn,
+             force isCut true regardless of what ESPN reports. Used when ESPN keeps
+             showing a stale R2 position with no cut indicator. */
+          if (p.forceCut) m[k].isCut = true;
+        }
         break;
       }
     }
@@ -178,7 +184,7 @@ const P = {
   spieth: { name: "Jordan Spieth", owgr: 61, bucket: "40+", flag: "🇺🇸" },
   woodland: { name: "Gary Woodland", owgr: 52, bucket: "40+", flag: "🇺🇸" },
   koepka: { name: "Brooks Koepka", owgr: 169, bucket: "40+", flag: "🇺🇸" },
-  zjohnson: { name: "Zach Johnson", owgr: 320, bucket: "40+", flag: "🇺🇸" },
+  zjohnson: { name: "Zach Johnson", owgr: 320, bucket: "40+", flag: "🇺🇸", forceCut: true },
 };
 
 const BC = { "1-10": { bg: "#1a472a", t: "#f4d35e" }, "11-20": { bg: "#2d5a3d", t: "#fff" }, "21-30": { bg: "#3d7a52", t: "#fff" }, "31-40": { bg: "#5a9a6e", t: "#fff" }, "40+": { bg: "#7ab88a", t: "#1a472a" } };
