@@ -627,6 +627,21 @@ function LiveScoreboard({ ld }) {
     const av = a.toParValue ?? 999, bv = b.toParValue ?? 999;
     return av - bv;
   });
+  /* Compute positions ourselves — ESPN's positionDisplay is often blank.
+     Tie handling: players sharing toParValue get the same position with "T" prefix.
+     Cut players get "—" (per spec). */
+  const posMap = {};
+  const eligible = rows.filter(r => !r.isCut && r.toParValue != null);
+  let i = 0;
+  while (i < eligible.length) {
+    let j = i;
+    while (j < eligible.length && eligible[j].toParValue === eligible[i].toParValue) j++;
+    const tied = j - i > 1;
+    const label = (tied ? "T" : "") + (i + 1);
+    for (let k = i; k < j; k++) posMap[eligible[k].name] = label;
+    i = j;
+  }
+  const posFor = p => p.isCut ? "—" : (posMap[p.name] || "—");
   const rdScore = (rounds, n) => {
     const r = rounds?.find(x => x.round === n);
     return (r && r.score != null && r.score !== 0) ? r.score : (r && r.score === 0 ? 0 : "—");
@@ -651,7 +666,7 @@ function LiveScoreboard({ ld }) {
           <tbody>
             {rows.map((p, i) => (
               <tr key={p.name + i} style={{ borderTop: "1px solid #eee", color: p.isCut ? "#999" : "#222" }}>
-                <td style={sb.td}>{p.isCut ? "CUT" : (p.positionDisplay || "—")}</td>
+                <td style={sb.td}>{posFor(p)}</td>
                 <td style={sb.td}>{flagFor(p.name)}</td>
                 <td style={{ ...sb.td, fontWeight: 600 }}>{p.name}</td>
                 <td style={{ ...sb.td, textAlign: "center" }}>{rdScore(p.rounds, 1)}</td>
