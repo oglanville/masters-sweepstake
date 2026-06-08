@@ -659,13 +659,26 @@ const sb = {
 
 
 /* ═══ MAIN APP ═══ */
-// Lock gate. Before first tee → entry/login/picks. After → the scoreboard.
-// Pre-lock, users can flip to the scoreboard and back to their entry.
+// Lock gate.
+//  • Before first tee: ONLY the entry/login/pick flow is reachable — there is no
+//    route to the scoreboard, so entrants can never see each other's picks.
+//  • At first tee (FIRST_TEE_TIME): the lock flips automatically (no reload needed)
+//    and everyone is sent to the scoreboard. Submitting/editing is blocked here AND
+//    server-side in the API, so a stale tab can't sneak an edit through.
+//  • After lock: the scoreboard is home; "My picks" lets a user log in to view
+//    their own locked picks, read-only.
 export default function App() {
-  const locked = entriesLocked();
-  const [view, setView] = useState(locked ? "app" : "entry");
-  if (view === "entry") return <Entry onViewLeaderboard={() => setView("app")} />;
-  return <Dashboard locked={locked} onBackToEntry={() => setView("entry")} />;
+  const [locked, setLocked] = useState(entriesLocked());
+  const [view, setView] = useState("app");
+  useEffect(() => {
+    if (locked) return;
+    const i = setInterval(() => { if (entriesLocked()) setLocked(true); }, 1000);
+    return () => clearInterval(i);
+  }, [locked]);
+
+  if (!locked) return <Entry />;                                  // pre-lock: entry only
+  if (view === "mypicks") return <Entry onViewLeaderboard={() => setView("app")} />;
+  return <Dashboard locked onBackToEntry={() => setView("mypicks")} />;
 }
 
 function Dashboard({ locked, onBackToEntry }) {

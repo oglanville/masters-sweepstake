@@ -189,7 +189,7 @@ export default function Entry({ onViewLeaderboard }) {
               <button style={locked ? st.primary : st.secondary} onClick={() => { setErr(null); setName(""); setPin(""); setMode("login"); }}>
                 {locked ? "Log in to view your picks" : "Log in to edit"}
               </button>
-              <button style={st.ghost} onClick={onViewLeaderboard}>View live scoreboard →</button>
+              {locked && <button style={st.ghost} onClick={onViewLeaderboard}>View live scoreboard →</button>}
             </div>
             <Rules />
           </>
@@ -246,7 +246,7 @@ export default function Entry({ onViewLeaderboard }) {
               </button>
             )}
             {saved && !busy && !locked && <div style={st.savedNote}>Your picks are saved. Come back any time before first tee to change them.</div>}
-            <button style={st.ghost} onClick={onViewLeaderboard}>View live scoreboard →</button>
+            {locked && <button style={st.ghost} onClick={onViewLeaderboard}>View live scoreboard →</button>}
             <Rules />
           </>
         )}
