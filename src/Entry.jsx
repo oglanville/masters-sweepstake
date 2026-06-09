@@ -8,6 +8,9 @@ import { FIRST_TEE_TIME, entriesLocked } from "./lockConfig.js";
    scoreboard; login here still works but picks become read-only.
    ═══════════════════════════════════════════════════════════════ */
 
+// Monzo.me link, pre-set to £10 with a "US Open 2026" reference.
+const MONZO_LINK = "https://monzo.me/oliverglanville/10.00?h=Cjf-gk&d=US%20Open%202026&account_type=personal";
+
 async function post(path, body) {
   const r = await fetch(path, {
     method: "POST",
@@ -208,6 +211,10 @@ export default function Entry({ onViewLeaderboard }) {
             </Labeled>
             <div style={st.calloutSm}>You can edit your picks until the first tee time.</div>
             <PickGrid picks={picks} setPick={setPick} disabled={false} />
+            <a href={MONZO_LINK} target="_blank" rel="noopener noreferrer" style={st.payBtn}>
+              <span style={{ fontSize: 16, marginRight: 6 }}>💳</span>Pay £10 entry fee
+            </a>
+            <div style={st.payNote}>Secure Monzo link — pay by Apple Pay, Google Pay or card. Opens in a new tab; come back here to submit your entry.</div>
             <button style={{ ...st.primary, opacity: allFive && name.trim() ? 1 : 0.5 }} disabled={!allFive || !name.trim() || busy} onClick={submitNew}>
               {busy ? "Submitting…" : "Submit entry"}
             </button>
@@ -293,6 +300,8 @@ const st = {
   selectDisabled: { background: "#f0ede6", color: "#444", cursor: "not-allowed" },
   welcome: { fontSize: 13, color: "#555", marginBottom: 12 },
   savedNote: { fontSize: 12, color: GREEN, marginTop: 8 },
+  payBtn: { display: "flex", alignItems: "center", justifyContent: "center", width: "100%", padding: "13px", marginBottom: 8, background: "#14233c", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, fontFamily: "inherit", cursor: "pointer", textDecoration: "none", boxSizing: "border-box" },
+  payNote: { fontSize: 11, color: "#888", textAlign: "center", marginBottom: 12, lineHeight: 1.4 },
   error: { background: "#fde8e8", border: "1px solid #f5c2c2", color: "#8a1f1f", borderRadius: 8, padding: "10px 12px", fontSize: 13, marginBottom: 12 },
   rules: { marginTop: 18, paddingTop: 14, borderTop: "2px solid rgba(26,71,42,0.15)" },
   rulesTitle: { fontFamily: "'Playfair Display',serif", fontSize: 18, color: GREEN, marginBottom: 10 },
