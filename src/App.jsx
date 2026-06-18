@@ -505,15 +505,15 @@ function HomeView({ ents, lpm, isLive, ld }) {
         </div>
         <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Main</div>
-          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£{Math.max(0, ents.length * 10 - 80)}</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£{Math.max(0, ents.length * 10 - 40)}</div>
         </div>
         <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Low Rd</div>
-          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£40</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£20</div>
         </div>
         <div style={{flex:1,background:"#fff",borderRadius:10,padding:"10px",textAlign:"center",border:"1px solid #e0ddd5"}}>
           <div style={{fontSize:9,fontWeight:700,textTransform:"uppercase",color:"#999",letterSpacing:"0.4px"}}>Out Perf</div>
-          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£40</div>
+          <div style={{fontSize:18,fontWeight:800,color:"#1a472a",fontFamily:"'Playfair Display',serif"}}>£20</div>
         </div>
       </div>
       {[
@@ -964,11 +964,11 @@ function RulesView() {
     <div>
       <H2 t="How It Works" sub="Three games, one team of five" />
       {[
-        { icon: "🎫", title: "Entry Fee", text: "£10 per entry. The pool is the Main Game plus two £40 side-games (Lowest Round, Out Performer). Enter on the landing page and edit your picks any time until the first tee." },
+        { icon: "🎫", title: "Entry Fee", text: "£10 per entry. The pool is the Main Game plus two £20 side-games (Lowest Round, Out Performer). Enter on the landing page and edit your picks any time until the first tee." },
         { icon: "🏌️", title: "Player Selection", text: <span>Pick 5 players — one from each OWGR bucket: 1–10, 11–20, 21–30, 31–40, and 40+ (rank 41 through the very last ranked player). Dropdowns are populated from the current OWGR.</span> },
         { icon: "🏆", title: "Game 1 — Main Game", text: "Your 5-player team competes on total US Open prize money earned across the tournament. Highest combined total wins the Main pot." },
-        { icon: "📉", title: "Game 2 — Lowest Single Round (£40)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
-        { icon: "📈", title: "Game 3 — Out Performer (£40)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
+        { icon: "📉", title: "Game 2 — Lowest Single Round (£20)", text: "The model automatically finds the best single round from across your 5 players. Whichever of your players posts the lowest individual round of the week is your score. Tiebreak: the next-lowest single round from a different player in your team." },
+        { icon: "📈", title: "Game 3 — Out Performer (£20)", text: "The model automatically finds the biggest riser from your 5 players. Your score = the most places any of your players beats their pre-tournament OWGR rank by (must make the cut). Tiebreak: the next-largest riser from a different player in your team." },
         { icon: "💰", title: "Prize Money & Data", text: "Prize money comes live from the official U.S. Open purse via ESPN. The total purse is $21,500,000 — $4,300,000 to the winner, $2,322,000 for 2nd, decreasing through every player who makes the cut (top 60 and ties after 36 holes). Players who miss the cut earn $0." },
         { icon: "📱", title: "Live Data", text: "This dashboard pulls live scores, positions, and prize money from ESPN's golf API every 60 seconds during the tournament. All standings and Path to Victory analysis update automatically." },
         { icon: "📝", title: "Notes", text: "Games 2 & 3 use the same 5 players from your Main Game team — the model automatically selects the best performer for each game. Picks lock automatically at the first tee on Thursday 18 June 2026." },
