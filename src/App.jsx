@@ -15,7 +15,7 @@ function useLiveData() {
     try {
       const r = await fetch(ESPN_URL); if (!r.ok) throw new Error(`${r.status}`);
       const d = await r.json(), evs = d?.events || [];
-      let ev = evs.find(e => e.name?.toLowerCase().includes("masters")) || evs[0];
+      let ev = evs.find(e => /u\.?s\.?\s*open/i.test(e.name || "")) || evs[0];
       if (!ev) { setLd({ status: "no-event", players: [] }); setLoading(false); setTs(new Date()); return; }
       const comp = ev.competitions?.[0];
       /* FIX 7: log the first raw competitor ONCE so we can see what ESPN is actually returning.
@@ -110,7 +110,8 @@ function useLiveData() {
   return { ld, loading, err, ts, refresh: fetch_ };
 }
 
-const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const norm = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  .replace(/\u00f8/g, "o").replace(/\u00e6/g, "ae").replace(/\u00e5/g, "a").replace(/\u0142/g, "l").replace(/\u00f0/g, "d");
 /* FIX 1: first-initial + last-name fallback to distinguish Nicolai vs Rasmus Hojgaard */
 const initLast = s => { const p = s.split(" "); return (p[0]?.[0] || "") + (p[p.length - 1] || ""); };
 
